@@ -1,0 +1,3 @@
+backend/db/traceability.db-wal
+backend/db/traceability.db-shm
+reports/

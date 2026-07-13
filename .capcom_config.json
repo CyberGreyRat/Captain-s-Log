@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "api_url": "http://127.0.0.1:8000",
+  "requirements_directory": "reqs"
+}

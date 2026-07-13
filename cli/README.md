@@ -1,34 +1,18 @@
-# CapCom CLI - Phase 3 Scaffold
+# CapCom CLI 0.3.1
 
-This scaffold fixes the module boundaries before the command implementations:
+Build with the existing TDM-GCC preset:
 
-- `cli`: argument parsing and command representation
-- `config`: local project/API configuration
-- `http`: FastAPI transport via libcurl
-- `main.cpp`: composition root and exit-code handling
-
-## Dependencies
-
-- CMake 3.24+
-- C++20 compiler
-- Ninja
-- vcpkg
-- libcurl
-- nlohmann-json
-
-## Configure and build
-
-Set `VCPKG_ROOT`, then run from the `cli` directory:
-
-```bash
+```powershell
+if (Test-Path build) { rmdir build -Recurse -Force }
 cmake --preset default
 cmake --build --preset default
 ```
 
-Run:
+Initialize and create an item from the CapCom project root:
 
-```bash
-./build/debug/cap help
+```powershell
+.\cli\build\debug\cap.exe init
+.\cli\build\debug\cap.exe create srs "I2C Sensor auslesen"
 ```
 
-On Windows, the executable is `build\\debug\\cap.exe`.
+`create` currently writes the local YAML source of truth. API synchronization remains isolated for the next step because libcurl is not yet linked under TDM-GCC.

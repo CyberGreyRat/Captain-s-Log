@@ -1,10 +1,6 @@
 {
   "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 24,
-    "patch": 0
-  },
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
   "configurePresets": [
     {
       "name": "default",
@@ -23,20 +19,11 @@
       "displayName": "CapCom CLI - Release (TDM-GCC)",
       "inherits": "default",
       "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CAPCOM_BUILD_TESTS": "OFF"
-      }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "CAPCOM_BUILD_TESTS": "OFF" }
     }
   ],
   "buildPresets": [
-    {
-      "name": "default",
-      "configurePreset": "default"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    }
+    { "name": "default", "configurePreset": "default" },
+    { "name": "release", "configurePreset": "release" }
   ]
 }
