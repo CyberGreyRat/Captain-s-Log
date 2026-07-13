@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "capcom-cli"
+version = "0.3.2"
+description = "CapCom local requirements and traceability CLI"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "CapCom Team" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.scripts]
+cap = "capcom.wrapper:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+capcom = ["bin/cap.exe"]

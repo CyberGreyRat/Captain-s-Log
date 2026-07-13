@@ -1,0 +1,9 @@
+Copy the compiled file from:
+
+cli\build\debug\cap.exe
+
+into this directory as:
+
+cap.exe
+
+The binary is intentionally not fabricated by this scaffold.
