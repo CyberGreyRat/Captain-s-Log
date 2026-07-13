@@ -1,0 +1,24 @@
+#include "capcom/requirements/requirement_store.hpp"
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+namespace capcom::requirements { namespace {
+std::string trim(std::string s){auto a=s.find_first_not_of(" \t\r\n"); if(a==std::string::npos)return{}; auto b=s.find_last_not_of(" \t\r\n"); return s.substr(a,b-a+1);}
+std::string upper(std::string s){std::transform(s.begin(),s.end(),s.begin(),[](unsigned char c){return static_cast<char>(std::toupper(c));});return s;}
+std::string unquote(std::string s){s=trim(s);if(s.size()>=2&&s.front()=='"'&&s.back()=='"')s=s.substr(1,s.size()-2);return s;}
+std::vector<std::string> list(const std::string& s){auto a=s.find('['),b=s.rfind(']');std::vector<std::string> out;if(a==std::string::npos||b<=a)return out;std::stringstream in{s.substr(a+1,b-a-1)};std::string v;while(std::getline(in,v,',')){v=upper(unquote(v));if(!v.empty())out.push_back(v);}return out;}
+std::string render(std::vector<std::string> v){std::sort(v.begin(),v.end());v.erase(std::unique(v.begin(),v.end()),v.end());std::ostringstream o;o<<'[';for(size_t i=0;i<v.size();++i){if(i)o<<", ";o<<v[i];}o<<']';return o.str();}
+std::vector<std::string> read(const std::filesystem::path& p){std::ifstream in(p);if(!in)throw std::runtime_error("Cannot read "+p.string());std::vector<std::string> v;std::string s;while(std::getline(in,s)){if(!s.empty()&&s.back()=='\r')s.pop_back();v.push_back(s);}return v;}
+void write(const std::filesystem::path& p,const std::vector<std::string>& v){auto t=p;t+=".tmp";{std::ofstream o(t,std::ios::trunc);if(!o)throw std::runtime_error("Cannot write "+t.string());for(auto&s:v)o<<s<<'\n';}std::error_code e;std::filesystem::remove(p,e);e.clear();std::filesystem::rename(t,p,e);if(e)throw std::runtime_error("Cannot replace "+p.string());}
+void update(const std::filesystem::path&p,const std::string&field,const std::string&id,bool add){auto lines=read(p);auto prefix=field+":";auto it=std::find_if(lines.begin(),lines.end(),[&](auto&s){return s.rfind(prefix,0)==0;});auto values=it==lines.end()?std::vector<std::string>{}:list(*it);if(add){if(std::find(values.begin(),values.end(),id)==values.end())values.push_back(id);}else values.erase(std::remove(values.begin(),values.end(),id),values.end());auto line=prefix+" "+render(values);if(it!=lines.end())*it=line;else{auto pos=std::find_if(lines.begin(),lines.end(),[](auto&s){return s.rfind("integration_template:",0)==0;});lines.insert(pos,line);}write(p,lines);}
+Requirement parse(const std::filesystem::path&p){Requirement r;r.file=p;for(auto&line:read(p)){auto x=line.find(':');if(x==std::string::npos)continue;auto k=trim(line.substr(0,x)),v=line.substr(x+1);if(k=="uid")r.uid=upper(unquote(v));else if(k=="type")r.type=upper(unquote(v));else if(k=="title")r.title=unquote(v);else if(k=="status")r.status=unquote(v);else if(k=="parents")r.parents=list(v);else if(k=="children")r.children=list(v);}if(r.uid.empty())throw std::runtime_error("Missing uid in "+p.string());return r;}
+bool reachable(const std::map<std::string,Requirement>&m,const std::string&s,const std::string&t){std::vector<std::string> q{s};std::set<std::string> seen;while(!q.empty()){auto x=q.back();q.pop_back();if(x==t)return true;if(!seen.insert(x).second)continue;auto it=m.find(x);if(it!=m.end())q.insert(q.end(),it->second.children.begin(),it->second.children.end());}return false;}
+}
+RequirementStore::RequirementStore(std::filesystem::path p):project_(std::move(p)){}
+std::map<std::string,Requirement> RequirementStore::load_all()const{auto d=project_/"reqs";if(!std::filesystem::is_directory(d))throw std::runtime_error("Requirements directory not found. Run 'cap init'.");std::map<std::string,Requirement> m;for(auto&e:std::filesystem::directory_iterator(d)){auto ext=upper(e.path().extension().string());if(e.is_regular_file()&&(ext==".YAML"||ext==".YML")){auto r=parse(e.path());if(!m.emplace(r.uid,std::move(r)).second)throw std::runtime_error("Duplicate UID in "+e.path().string());}}return m;}
+void RequirementStore::add_link(const std::string&c0,const std::string&p0)const{auto c=upper(c0),p=upper(p0);if(c==p)throw std::runtime_error("An item cannot link to itself.");auto m=load_all();auto ci=m.find(c),pi=m.find(p);if(ci==m.end())throw std::runtime_error("Child not found: "+c);if(pi==m.end())throw std::runtime_error("Parent not found: "+p);if(reachable(m,c,p))throw std::runtime_error("Link would create a cycle.");update(ci->second.file,"parents",p,true);try{update(pi->second.file,"children",c,true);}catch(...){update(ci->second.file,"parents",p,false);throw;}}
+void RequirementStore::remove_link(const std::string&c0,const std::string&p0)const{auto c=upper(c0),p=upper(p0);auto m=load_all();auto ci=m.find(c),pi=m.find(p);if(ci==m.end()||pi==m.end())throw std::runtime_error("Child or parent not found.");update(ci->second.file,"parents",p,false);update(pi->second.file,"children",c,false);}
+}

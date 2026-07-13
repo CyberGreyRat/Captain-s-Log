@@ -10,9 +10,13 @@ add_library(capcom_cli_core STATIC
     src/cli/command_parser.cpp
     src/commands/init_command.cpp
     src/commands/create_command.cpp
+    src/commands/link_command.cpp
+    src/commands/tree_command.cpp
+    src/requirements/requirement_store.cpp
     src/config/app_config.cpp
     src/http/http_client.cpp
 )
+
 add_library(CapCom::CliCore ALIAS capcom_cli_core)
 target_include_directories(capcom_cli_core PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

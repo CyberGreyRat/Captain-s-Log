@@ -1,0 +1,4 @@
+Add these source files to add_library(capcom_cli_core STATIC ...):
+    src/commands/link_command.cpp
+    src/commands/tree_command.cpp
+    src/requirements/requirement_store.cpp

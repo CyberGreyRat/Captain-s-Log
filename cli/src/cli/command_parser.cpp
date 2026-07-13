@@ -1,17 +1,2 @@
 #include "capcom/cli/command_parser.hpp"
-namespace capcom::cli {
-Command CommandParser::parse(const int argc, const char* const argv[]) const {
-    if (argc < 2) return {CommandType::help, {}};
-    const std::string_view name{argv[1]};
-    Command result{};
-    if (name == "help" || name == "--help" || name == "-h") result.type = CommandType::help;
-    else if (name == "version" || name == "--version") result.type = CommandType::version;
-    else if (name == "init") result.type = CommandType::init;
-    else if (name == "create") result.type = CommandType::create;
-    for (int i = 2; i < argc; ++i) result.arguments.emplace_back(argv[i]);
-    return result;
-}
-std::string_view CommandParser::help_text() noexcept {
-    return "CapCom CLI 0.3.1\nUsage:\n  cap init [directory]\n  cap create <type> <title>\n  cap help\n";
-}
-}
+namespace capcom::cli {Command CommandParser::parse(int n,const char*const a[])const{if(n<2)return{CommandType::help,{}};std::string_view s{a[1]};Command c;if(s=="help"||s=="-h"||s=="--help")c.type=CommandType::help;else if(s=="version"||s=="-v"||s=="--version")c.type=CommandType::version;else if(s=="init"||s=="-i")c.type=CommandType::init;else if(s=="create"||s=="-c")c.type=CommandType::create;else if(s=="link"||s=="-l")c.type=CommandType::link;else if(s=="unlink"||s=="-u")c.type=CommandType::unlink;else if(s=="tree"||s=="-t")c.type=CommandType::tree;for(int i=2;i<n;++i)c.arguments.emplace_back(a[i]);return c;}std::string_view CommandParser::help_text()noexcept{return "CapCom CLI 0.3.2\nUsage:\n  cap init [directory]                 (-i)\n  cap create <type> <title>            (-c)\n  cap link <child_uid> <parent_uid>    (-l)\n  cap unlink <child_uid> <parent_uid>  (-u)\n  cap tree                             (-t)\n";}}
