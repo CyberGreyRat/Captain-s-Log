@@ -1,0 +1,15 @@
+uid: USR-001
+type: USR
+status: Draft
+title: "Der User will die Temperatur ohne Abweichungen messen"
+text: ""
+rationale: ""
+version: "0.1.0"
+git_hash: null
+attributes: {}
+children: [SRS-001, SYS-001]
+integration_template: |
+  /* @cap-start: USR-001
+   * @cap-desc: Der User will die Temperatur ohne Abweichungen messen
+   */
+  /* @cap-end: USR-001 */
