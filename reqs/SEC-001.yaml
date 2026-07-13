@@ -1,0 +1,16 @@
+uid: SEC-001
+type: SEC
+status: Draft
+title: "Sicherheitsanforderungen Åber HTTPSSSSS"
+text: ""
+rationale: ""
+version: "0.1.0"
+git_hash: null
+attributes: {}
+parents: [USR-002]
+children: [SYS-002]
+integration_template: |
+  /* @cap-start: SEC-001
+   * @cap-desc: Sicherheitsanforderungen Åber HTTPSSSSS
+   */
+  /* @cap-end: SEC-001 */

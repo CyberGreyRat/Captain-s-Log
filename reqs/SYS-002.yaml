@@ -1,0 +1,16 @@
+uid: SYS-002
+type: SYS
+status: Draft
+title: "STM32 muss den Sensor zyklisch auslesen"
+text: ""
+rationale: ""
+version: "0.1.0"
+git_hash: null
+attributes: {}
+parents: [SEC-001, USR-002]
+children: [SRS-003]
+integration_template: |
+  /* @cap-start: SYS-002
+   * @cap-desc: STM32 muss den Sensor zyklisch auslesen
+   */
+  /* @cap-end: SYS-002 */
