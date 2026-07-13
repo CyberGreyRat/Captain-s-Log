@@ -1,3 +1,4 @@
 {
-    "wolf.disableHotModeWarning": true
+    "wolf.disableHotModeWarning": true,
+    "cmake.sourceDirectory": "C:/Users/luec-a/Documents/CapCom/cli"
 }

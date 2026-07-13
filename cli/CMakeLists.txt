@@ -15,6 +15,8 @@ add_library(capcom_cli_core STATIC
     src/requirements/requirement_store.cpp
     src/config/app_config.cpp
     src/http/http_client.cpp
+    src/yaml/yaml_store.cpp    
+    src/commands/yaml_commands.cpp
 )
 
 add_library(CapCom::CliCore ALIAS capcom_cli_core)
