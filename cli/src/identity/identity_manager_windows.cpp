@@ -116,3 +116,5 @@ Identity IdentityManager::load_or_create() const {
         field(json, "algorithm"), field(json, "public_key")};
 }
 }
+
+

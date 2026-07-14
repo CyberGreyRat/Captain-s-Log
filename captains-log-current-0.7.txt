@@ -1,0 +1,4687 @@
+
+===== FILE: .\cli\CMakeLists.txt =====
+
+cmake_minimum_required(VERSION 3.24)
+
+project(
+    CaptainsLogCLI
+    VERSION 0.6.0
+    DESCRIPTION "Captain's Log YAML-First Requirements and Traceability CLI"
+    LANGUAGES CXX
+)
+
+option(
+    CAPCOM_BUILD_TESTS
+    "Build Captain's Log CLI tests"
+    ON
+)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_library(
+    capcom_cli_core
+    STATIC
+        src/cli/command_parser.cpp
+        src/commands/init_command.cpp
+        src/commands/create_command.cpp
+        src/commands/link_command.cpp
+        src/commands/tree_command.cpp
+        src/commands/yaml_commands.cpp
+        src/commands/security_commands.cpp
+        src/commands/manual_commands.cpp
+        src/requirements/requirement_store.cpp
+        src/yaml/yaml_store.cpp
+        src/config/app_config.cpp
+        src/http/http_client.cpp
+        src/identity/identity_manager_windows.cpp
+        src/security/crypto.cpp
+        src/audit/history_service.cpp
+        src/commands/publish_command.cpp
+        src/commands/review_command.cpp
+
+)
+
+add_library(
+    CaptainsLog::CliCore
+    ALIAS
+    capcom_cli_core
+)
+
+target_include_directories(
+    capcom_cli_core
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_compile_features(
+    capcom_cli_core
+    PUBLIC
+        cxx_std_20
+)
+
+if(MSVC)
+    target_compile_options(
+        capcom_cli_core
+        PRIVATE
+            /W4
+            /permissive-
+            /EHsc
+    )
+else()
+    target_compile_options(
+        capcom_cli_core
+        PRIVATE
+            -Wall
+            -Wextra
+            -Wpedantic
+            -Wconversion
+    )
+endif()
+
+if(WIN32)
+    target_link_libraries(
+        capcom_cli_core
+        PRIVATE
+            ncrypt
+            bcrypt
+            crypt32
+    )
+endif()
+
+add_executable(
+    cap
+    src/main.cpp
+)
+
+target_link_libraries(
+    cap
+    PRIVATE
+        CaptainsLog::CliCore
+)
+
+if(WIN32)
+    target_link_libraries(
+        cap
+        PRIVATE
+            shell32
+    )
+endif()
+
+include(GNUInstallDirs)
+
+install(
+    TARGETS cap
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+if(CAPCOM_BUILD_TESTS)
+    include(CTest)
+
+    if(BUILD_TESTING)
+        add_subdirectory(tests)
+    endif()
+endif()
+
+===== FILE: .\cli\CMakePresets.json =====
+
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "CapCom CLI - Debug (TDM-GCC)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_MAKE_PROGRAM": "${sourceDir}/../.venv/Scripts/ninja.exe",
+        "CMAKE_CXX_COMPILER": "C:/TDM-GCC-64/bin/g++.exe",
+        "CAPCOM_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "CapCom CLI - Release (TDM-GCC)",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "CAPCOM_BUILD_TESTS": "OFF" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default" },
+    { "name": "release", "configurePreset": "release" }
+  ]
+}
+
+
+===== FILE: .\cli\vcpkg.json =====
+
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "capcom-cli",
+  "version-string": "0.3.0",
+  "dependencies": [
+    "curl",
+    "nlohmann-json"
+  ]
+}
+
+
+===== FILE: .\cli\build\debug\cmake_install.cmake =====
+
+# Install script for directory: C:/Users/luec-a/Documents/capcom/cli
+
+# Set the install prefix
+if(NOT DEFINED CMAKE_INSTALL_PREFIX)
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/CaptainsLogCLI")
+endif()
+string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+# Set the install configuration name.
+if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
+  if(BUILD_TYPE)
+    string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
+           CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
+  else()
+    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
+  endif()
+  message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
+endif()
+
+# Set the component getting installed.
+if(NOT CMAKE_INSTALL_COMPONENT)
+  if(COMPONENT)
+    message(STATUS "Install component: \"${COMPONENT}\"")
+    set(CMAKE_INSTALL_COMPONENT "${COMPONENT}")
+  else()
+    set(CMAKE_INSTALL_COMPONENT)
+  endif()
+endif()
+
+# Is this installation the result of a crosscompile?
+if(NOT DEFINED CMAKE_CROSSCOMPILING)
+  set(CMAKE_CROSSCOMPILING "FALSE")
+endif()
+
+# Set path to fallback-tool for dependency-resolution.
+if(NOT DEFINED CMAKE_OBJDUMP)
+  set(CMAKE_OBJDUMP "C:/TDM-GCC-64/bin/objdump.exe")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES "C:/Users/luec-a/Documents/capcom/cli/build/debug/cap.exe")
+  if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cap.exe" AND
+     NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cap.exe")
+    if(CMAKE_INSTALL_DO_STRIP)
+      execute_process(COMMAND "C:/TDM-GCC-64/bin/strip.exe" "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/bin/cap.exe")
+    endif()
+  endif()
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("C:/Users/luec-a/Documents/capcom/cli/build/debug/tests/cmake_install.cmake")
+endif()
+
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "C:/Users/luec-a/Documents/capcom/cli/build/debug/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
+if(CMAKE_INSTALL_COMPONENT)
+  if(CMAKE_INSTALL_COMPONENT MATCHES "^[a-zA-Z0-9_.+-]+$")
+    set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INSTALL_COMPONENT}.txt")
+  else()
+    string(MD5 CMAKE_INST_COMP_HASH "${CMAKE_INSTALL_COMPONENT}")
+    set(CMAKE_INSTALL_MANIFEST "install_manifest_${CMAKE_INST_COMP_HASH}.txt")
+    unset(CMAKE_INST_COMP_HASH)
+  endif()
+else()
+  set(CMAKE_INSTALL_MANIFEST "install_manifest.txt")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "C:/Users/luec-a/Documents/capcom/cli/build/debug/${CMAKE_INSTALL_MANIFEST}"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
+
+
+===== FILE: .\cli\build\debug\compile_commands.json =====
+
+[
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\cli\\command_parser.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\cli\\command_parser.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/cli/command_parser.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/cli/command_parser.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\init_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\init_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/init_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/init_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\create_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\create_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/create_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/create_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\link_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\link_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/link_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/link_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\tree_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\tree_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/tree_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/tree_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\yaml_commands.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\yaml_commands.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/yaml_commands.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/yaml_commands.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\security_commands.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\security_commands.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/security_commands.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/security_commands.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\manual_commands.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\manual_commands.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/manual_commands.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/manual_commands.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\requirements\\requirement_store.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\requirements\\requirement_store.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/requirements/requirement_store.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/requirements/requirement_store.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\yaml\\yaml_store.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\yaml\\yaml_store.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/yaml/yaml_store.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/yaml/yaml_store.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\config\\app_config.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\config\\app_config.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/config/app_config.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/config/app_config.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\http\\http_client.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\http\\http_client.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/http/http_client.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/http/http_client.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\identity\\identity_manager_windows.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\identity\\identity_manager_windows.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/identity/identity_manager_windows.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/identity/identity_manager_windows.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\security\\crypto.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\security\\crypto.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/security/crypto.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/security/crypto.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\audit\\history_service.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\audit\\history_service.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/audit/history_service.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/audit/history_service.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\publish_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\publish_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/publish_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/publish_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -o CMakeFiles\\capcom_cli_core.dir\\src\\commands\\review_command.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\commands\\review_command.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/commands/review_command.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/capcom_cli_core.dir/src/commands/review_command.cpp.obj"
+},
+{
+  "directory": "C:/Users/luec-a/Documents/capcom/cli/build/debug",
+  "command": "C:\\TDM-GCC-64\\bin\\g++.exe -IC:/Users/luec-a/Documents/capcom/cli/include -g -std=c++2a -o CMakeFiles\\cap.dir\\src\\main.cpp.obj -c C:\\Users\\luec-a\\Documents\\capcom\\cli\\src\\main.cpp",
+  "file": "C:/Users/luec-a/Documents/capcom/cli/src/main.cpp",
+  "output": "C:/Users/luec-a/Documents/capcom/cli/build/debug/CMakeFiles/cap.dir/src/main.cpp.obj"
+}
+]
+
+
+===== FILE: .\cli\build\debug\CTestTestfile.cmake =====
+
+# CMake generated Testfile for 
+# Source directory: C:/Users/luec-a/Documents/capcom/cli
+# Build directory: C:/Users/luec-a/Documents/capcom/cli/build/debug
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+subdirs("tests")
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\CTestScript.cmake =====
+
+# This file is configured by CMake automatically as CTestScript.cmake
+# If you choose not to use CMake, this file may be hand configured, by
+# filling in the required variables.
+
+cmake_minimum_required(VERSION 4.4.0)
+
+# CTest Start Step
+set(CTEST_SOURCE_DIRECTORY "C:/Users/luec-a/Documents/capcom/cli")
+set(CTEST_BINARY_DIRECTORY "C:/Users/luec-a/Documents/capcom/cli/build/debug")
+
+# CTest Update Step
+set(CTEST_UPDATE_COMMAND "")
+set(CTEST_UPDATE_OPTIONS "")
+set(CTEST_UPDATE_VERSION_ONLY "")
+set(CTEST_NIGHTLY_START_TIME "00:00:00 EDT")
+
+# CVS options
+set(CTEST_CVS_COMMAND "")
+set(CTEST_CVS_UPDATE_OPTIONS "")
+
+# Subversion options
+set(CTEST_SVN_COMMAND "")
+set(CTEST_SVN_OPTIONS "")
+set(CTEST_SVN_UPDATE_OPTIONS "")
+
+# Git options
+set(CTEST_GIT_COMMAND "")
+set(CTEST_GIT_INIT_SUBMODULES "")
+set(CTEST_GIT_UPDATE_CUSTOM "")
+set(CTEST_GIT_UPDATE_OPTIONS "")
+
+# Perforce options
+set(CTEST_P4_COMMAND "")
+set(CTEST_P4_CLIENT "")
+set(CTEST_P4_OPTIONS "")
+set(CTEST_P4_UPDATE_CUSTOM "")
+set(CTEST_P4_UPDATE_OPTIONS "")
+
+# CTest Configure Step
+set(CTEST_CMAKE_GENERATOR "Ninja")
+set(CTEST_LABELS_FOR_SUBPROJECTS "")
+
+# CTest Build Step
+set(CTEST_CONFIGURATION_TYPE "Release")
+set(CTEST_USE_LAUNCHERS "")
+
+# CTest Test Step
+set(CTEST_RESOURCE_SPEC_FILE "")
+set(CTEST_TEST_LOAD "")
+set(CTEST_TEST_TIMEOUT "1500")
+set(CTEST_TEST_COVERAGE_TOOL ""
+
+# CTest Coverage Step
+set(CTEST_COVERAGE_COMMAND "C:/TDM-GCC-64/bin/gcov.exe")
+set(CTEST_COVERAGE_EXTRA_FLAGS "-l")
+
+# CTest MemCheck Step
+set(CTEST_MEMORYCHECK_COMMAND "MEMORYCHECK_COMMAND-NOTFOUND")
+set(CTEST_MEMORYCHECK_COMMAND_OPTIONS "")
+set(CTEST_MEMORYCHECK_TYPE "")
+set(CTEST_MEMORYCHECK_SANITIZER_OPTIONS "")
+set(CTEST_MEMORYCHECK_SUPPRESSIONS_FILE "")
+
+# CTest Submit Step
+set(CTEST_SITE "AE-WS-8826743")
+set(CTEST_BUILD_NAME "Win32-ninja")
+set(CTEST_SUBMIT_URL "http://")
+set(CTEST_SUBMIT_INACTIVITY_TIMEOUT "")
+set(CTEST_TLS_VERIFY "")
+set(CTEST_TLS_VERSION "")
+
+################################################################################
+
+if(NOT MODEL)
+  set(MODEL "Experimental")
+endif()
+
+if(MODEL STREQUAL "NightlyMemoryCheck")
+  set(MODEL "Nightly")
+  set(ACTIONS "Start;Update;Configure;Build;MemCheck;Coverage;Submit")
+endif()
+
+if(NOT ACTIONS)
+  if(MODEL STREQUAL "Experimental")
+    set(ACTIONS "Start;Configure;Build;Test;Coverage;Submit")
+  else()
+    set(ACTIONS "Start;Update;Configure;Build;Test;Coverage;Submit")
+  endif()
+endif()
+
+################################################################################
+
+set(_exit_code 0)
+
+if("Start" IN_LIST ACTIONS OR NOT EXISTS "${CTEST_BINARY_DIRECTORY}/Testing/TAG")
+  ctest_start("${MODEL}")
+else()
+  ctest_start("${MODEL}" APPEND)
+endif()
+
+if("Update" IN_LIST ACTIONS)
+  ctest_update(RETURN_VALUE update_count)
+  if(update_count LESS 0)
+    math(EXPR _exit_code "${_exit_code} | 0x01")
+  endif()
+  if(MODEL STREQUAL "Continuous" AND update_count EQUAL 0)
+    return()
+  endif()
+endif()
+
+if("Configure" IN_LIST ACTIONS)
+  ctest_configure(RETURN_VALUE success)
+  if(success LESS 0)
+    math(EXPR _exit_code "${_exit_code} | 0x02")
+  endif()
+endif()
+
+if("Build" IN_LIST ACTIONS)
+  ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
+  ctest_build(RETURN_VALUE success)
+  if(NOT success EQUAL 0)
+    math(EXPR _exit_code "${_exit_code} | 0x04")
+  endif()
+endif()
+
+if("Test" IN_LIST ACTIONS)
+  ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
+  ctest_test(RETURN_VALUE success)
+  if(NOT success EQUAL 0)
+    math(EXPR _exit_code "${_exit_code} | 0x08")
+  endif()
+endif()
+
+if("Coverage" IN_LIST ACTIONS)
+  ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
+  ctest_coverage(RETURN_VALUE success)
+  if(NOT success EQUAL 0)
+    math(EXPR _exit_code "${_exit_code} | 0x20")
+  endif()
+endif()
+
+if("MemCheck" IN_LIST ACTIONS)
+  ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
+  ctest_memcheck(RETURN_VALUE success)
+  if(NOT success EQUAL 0)
+    math(EXPR _exit_code "${_exit_code} | 0x10")
+  endif()
+endif()
+
+file(GLOB notes_files LIST_DIRECTORIES OFF
+  "${CTEST_BINARY_DIRECTORY}/Testing/Notes/*")
+if(notes_files)
+  list(APPEND CTEST_NOTES_FILES "${notes_files}")
+endif()
+
+if("Submit" IN_LIST ACTIONS)
+  ctest_read_custom_files("${CTEST_BINARY_DIRECTORY}")
+  ctest_submit(
+    RETRY_COUNT "3"
+    RETRY_DELAY "5"
+    RETURN_VALUE success
+    )
+  if(NOT success EQUAL 0)
+    math(EXPR _exit_code "${_exit_code} | 0x40")
+  endif()
+endif()
+
+cmake_language(EXIT "${_exit_code}")
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\InstallScripts.json =====
+
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/luec-a/Documents/capcom/cli/build/debug/cmake_install.cmake",
+		"C:/Users/luec-a/Documents/capcom/cli/build/debug/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\4.4.0\CMakeCXXCompiler.cmake =====
+
+set(CMAKE_CXX_COMPILER "C:/TDM-GCC-64/bin/g++.exe")
+set(CMAKE_CXX_COMPILER_ARG1 "")
+set(CMAKE_CXX_COMPILER_ID "GNU")
+set(CMAKE_CXX_COMPILER_VERSION "10.3.0")
+set(CMAKE_CXX_COMPILER_VERSION_INTERNAL "")
+set(CMAKE_CXX_COMPILER_WRAPPER "")
+set(CMAKE_CXX_STANDARD_COMPUTED_DEFAULT "14")
+set(CMAKE_CXX_EXTENSIONS_COMPUTED_DEFAULT "ON")
+set(CMAKE_CXX_STANDARD_LATEST "20")
+set(CMAKE_CXX_COMPILE_FEATURES "cxx_std_98;cxx_template_template_parameters;cxx_std_11;cxx_alias_templates;cxx_alignas;cxx_alignof;cxx_attributes;cxx_auto_type;cxx_constexpr;cxx_decltype;cxx_decltype_incomplete_return_types;cxx_default_function_template_args;cxx_defaulted_functions;cxx_defaulted_move_initializers;cxx_delegating_constructors;cxx_deleted_functions;cxx_enum_forward_declarations;cxx_explicit_conversions;cxx_extended_friend_declarations;cxx_extern_templates;cxx_final;cxx_func_identifier;cxx_generalized_initializers;cxx_inheriting_constructors;cxx_inline_namespaces;cxx_lambdas;cxx_local_type_template_args;cxx_long_long_type;cxx_noexcept;cxx_nonstatic_member_init;cxx_nullptr;cxx_override;cxx_range_for;cxx_raw_string_literals;cxx_reference_qualified_functions;cxx_right_angle_brackets;cxx_rvalue_references;cxx_sizeof_member;cxx_static_assert;cxx_strong_enums;cxx_thread_local;cxx_trailing_return_types;cxx_unicode_literals;cxx_uniform_initialization;cxx_unrestricted_unions;cxx_user_literals;cxx_variadic_macros;cxx_variadic_templates;cxx_std_14;cxx_aggregate_default_initializers;cxx_attribute_deprecated;cxx_binary_literals;cxx_contextual_conversions;cxx_decltype_auto;cxx_digit_separators;cxx_generic_lambdas;cxx_lambda_init_captures;cxx_relaxed_constexpr;cxx_return_type_deduction;cxx_variable_templates;cxx_std_17;cxx_std_20")
+set(CMAKE_CXX98_COMPILE_FEATURES "cxx_std_98;cxx_template_template_parameters")
+set(CMAKE_CXX11_COMPILE_FEATURES "cxx_std_11;cxx_alias_templates;cxx_alignas;cxx_alignof;cxx_attributes;cxx_auto_type;cxx_constexpr;cxx_decltype;cxx_decltype_incomplete_return_types;cxx_default_function_template_args;cxx_defaulted_functions;cxx_defaulted_move_initializers;cxx_delegating_constructors;cxx_deleted_functions;cxx_enum_forward_declarations;cxx_explicit_conversions;cxx_extended_friend_declarations;cxx_extern_templates;cxx_final;cxx_func_identifier;cxx_generalized_initializers;cxx_inheriting_constructors;cxx_inline_namespaces;cxx_lambdas;cxx_local_type_template_args;cxx_long_long_type;cxx_noexcept;cxx_nonstatic_member_init;cxx_nullptr;cxx_override;cxx_range_for;cxx_raw_string_literals;cxx_reference_qualified_functions;cxx_right_angle_brackets;cxx_rvalue_references;cxx_sizeof_member;cxx_static_assert;cxx_strong_enums;cxx_thread_local;cxx_trailing_return_types;cxx_unicode_literals;cxx_uniform_initialization;cxx_unrestricted_unions;cxx_user_literals;cxx_variadic_macros;cxx_variadic_templates")
+set(CMAKE_CXX14_COMPILE_FEATURES "cxx_std_14;cxx_aggregate_default_initializers;cxx_attribute_deprecated;cxx_binary_literals;cxx_contextual_conversions;cxx_decltype_auto;cxx_digit_separators;cxx_generic_lambdas;cxx_lambda_init_captures;cxx_relaxed_constexpr;cxx_return_type_deduction;cxx_variable_templates")
+set(CMAKE_CXX17_COMPILE_FEATURES "cxx_std_17")
+set(CMAKE_CXX20_COMPILE_FEATURES "cxx_std_20")
+set(CMAKE_CXX23_COMPILE_FEATURES "")
+set(CMAKE_CXX26_COMPILE_FEATURES "")
+
+set(CMAKE_CXX_PLATFORM_ID "MinGW")
+set(CMAKE_CXX_SIMULATE_ID "")
+set(CMAKE_CXX_COMPILER_FRONTEND_VARIANT "GNU")
+set(CMAKE_CXX_COMPILER_APPLE_SYSROOT "")
+set(CMAKE_CXX_SIMULATE_VERSION "")
+set(CMAKE_CXX_COMPILER_ARCHITECTURE_ID "x86_64")
+
+
+
+
+set(CMAKE_AR "C:/TDM-GCC-64/bin/ar.exe")
+set(CMAKE_CXX_COMPILER_AR "C:/TDM-GCC-64/bin/gcc-ar.exe")
+set(CMAKE_RANLIB "C:/TDM-GCC-64/bin/ranlib.exe")
+set(CMAKE_CXX_COMPILER_RANLIB "C:/TDM-GCC-64/bin/gcc-ranlib.exe")
+set(CMAKE_LINKER "C:/TDM-GCC-64/bin/ld.exe")
+set(CMAKE_LINKER_LINK "")
+set(CMAKE_LINKER_LLD "")
+set(CMAKE_CXX_COMPILER_LINKER "C:/TDM-GCC-64/x86_64-w64-mingw32/bin/ld.exe")
+set(CMAKE_CXX_COMPILER_LINKER_ARCHITECTURE_FLAGS "-m;i386pep")
+set(CMAKE_CXX_COMPILER_LINKER_ID "GNU")
+set(CMAKE_CXX_COMPILER_LINKER_VERSION "2.36.1")
+set(CMAKE_CXX_COMPILER_LINKER_FRONTEND_VARIANT "GNU")
+set(CMAKE_MT "")
+set(CMAKE_TAPI "CMAKE_TAPI-NOTFOUND")
+set(CMAKE_COMPILER_IS_GNUCXX 1)
+set(CMAKE_CXX_COMPILER_LOADED 1)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_ABI_COMPILED TRUE)
+
+set(CMAKE_CXX_COMPILER_ENV_VAR "CXX")
+
+set(CMAKE_CXX_COMPILER_ID_RUN 1)
+set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS C;M;c++;cc;cpp;cxx;m;mm;mpp;CPP;ixx;cppm;ccm;cxxm;c++m)
+set(CMAKE_CXX_IGNORE_EXTENSIONS inl;h;hpp;HPP;H;o;O;obj;OBJ;def;DEF;rc;RC)
+
+foreach (lang IN ITEMS C OBJC OBJCXX)
+  if (CMAKE_${lang}_COMPILER_ID_RUN)
+    foreach(extension IN LISTS CMAKE_${lang}_SOURCE_FILE_EXTENSIONS)
+      list(REMOVE_ITEM CMAKE_CXX_SOURCE_FILE_EXTENSIONS ${extension})
+    endforeach()
+  endif()
+endforeach()
+
+set(CMAKE_CXX_LINKER_PREFERENCE 30)
+set(CMAKE_CXX_LINKER_PREFERENCE_PROPAGATES 1)
+set(CMAKE_CXX_LINKER_DEPFILE_SUPPORTED FALSE)
+set(CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED TRUE)
+set(CMAKE_CXX_LINKER_PUSHPOP_STATE_SUPPORTED TRUE)
+
+# Save compiler ABI information.
+set(CMAKE_CXX_SIZEOF_DATA_PTR "8")
+set(CMAKE_CXX_COMPILER_ABI "")
+set(CMAKE_CXX_BYTE_ORDER "LITTLE_ENDIAN")
+set(CMAKE_CXX_LIBRARY_ARCHITECTURE "")
+
+if(CMAKE_CXX_SIZEOF_DATA_PTR)
+  set(CMAKE_SIZEOF_VOID_P "${CMAKE_CXX_SIZEOF_DATA_PTR}")
+endif()
+
+if(CMAKE_CXX_COMPILER_ABI)
+  set(CMAKE_INTERNAL_PLATFORM_ABI "${CMAKE_CXX_COMPILER_ABI}")
+endif()
+
+if(CMAKE_CXX_LIBRARY_ARCHITECTURE)
+  set(CMAKE_LIBRARY_ARCHITECTURE "")
+endif()
+
+set(CMAKE_CXX_CL_SHOWINCLUDES_PREFIX "")
+if(CMAKE_CXX_CL_SHOWINCLUDES_PREFIX)
+  set(CMAKE_CL_SHOWINCLUDES_PREFIX "${CMAKE_CXX_CL_SHOWINCLUDES_PREFIX}")
+endif()
+
+
+
+
+
+set(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES "C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/include/c++;C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/include/c++/x86_64-w64-mingw32;C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/include/c++/backward;C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/include;C:/TDM-GCC-64/include;C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/include-fixed;C:/TDM-GCC-64/x86_64-w64-mingw32/include")
+set(CMAKE_CXX_IMPLICIT_LINK_LIBRARIES "C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0/libstdc++.a;mingw32;gcc;pthread;gcc;kernel32;moldname;mingwex;kernel32;pthread;advapi32;shell32;user32;kernel32;mingw32;gcc;pthread;gcc;kernel32;moldname;mingwex;kernel32")
+set(CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES "C:/TDM-GCC-64/lib/gcc/x86_64-w64-mingw32/10.3.0;C:/TDM-GCC-64/lib/gcc;C:/TDM-GCC-64/x86_64-w64-mingw32/lib;C:/TDM-GCC-64/lib")
+set(CMAKE_CXX_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")
+set(CMAKE_CXX_COMPILER_CLANG_RESOURCE_DIR "")
+
+set(CMAKE_CXX_COMPILER_IMPORT_STD "")
+set(CMAKE_CXX_COMPILER_IMPORT_STD_ERROR_MESSAGE  "Experimental `import std` support not enabled when detecting toolchain; it must be set before `CXX` is enabled (usually a `project()` call)")
+set(CMAKE_CXX_STDLIB_MODULES_JSON "")
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\4.4.0\CMakeRCCompiler.cmake =====
+
+set(CMAKE_RC_COMPILER "C:/TDM-GCC-64/bin/windres.exe")
+set(CMAKE_RC_COMPILER_ARG1 "")
+set(CMAKE_RC_COMPILER_LOADED 1)
+set(CMAKE_RC_SOURCE_FILE_EXTENSIONS rc;RC)
+set(CMAKE_RC_OUTPUT_EXTENSION .obj)
+set(CMAKE_RC_COMPILER_ENV_VAR "RC")
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\4.4.0\CMakeSystem.cmake =====
+
+set(CMAKE_HOST_SYSTEM "Windows-10.0.26200")
+set(CMAKE_HOST_SYSTEM_NAME "Windows")
+set(CMAKE_HOST_SYSTEM_VERSION "10.0.26200")
+set(CMAKE_HOST_SYSTEM_PROCESSOR "AMD64")
+
+
+
+set(CMAKE_SYSTEM "Windows-10.0.26200")
+set(CMAKE_SYSTEM_NAME "Windows")
+set(CMAKE_SYSTEM_VERSION "10.0.26200")
+set(CMAKE_SYSTEM_PROCESSOR "AMD64")
+
+set(CMAKE_CROSSCOMPILING "FALSE")
+
+set(CMAKE_SYSTEM_LOADED 1)
+
+
+===== FILE: .\cli\build\debug\CMakeFiles\4.4.0\CompilerIdCXX\CMakeCXXCompilerId.cpp =====
+
+/* This source file must have a .cpp extension so that all C++ compilers
+   recognize the extension without flags.  Borland does not know .cxx for
+   example.  */
+#ifndef __cplusplus
+# error "A C compiler has been selected for C++."
+#endif
+
+#if !defined(__has_include)
+/* If the compiler does not have __has_include, pretend the answer is
+   always no.  */
+#  define __has_include(x) 0
+#endif
+
+
+/* Version number components: V=Version, R=Revision, P=Patch
+   Version date components:   YYYY=Year, MM=Month,   DD=Day  */
+
+#if defined(__INTEL_COMPILER) || defined(__ICC)
+# define COMPILER_ID "Intel"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# if defined(__GNUC__)
+#  define SIMULATE_ID "GNU"
+# endif
+  /* __INTEL_COMPILER = VRP prior to 2021, and then VVVV for 2021 and later,
+     except that a few beta releases use the old format with V=2021.  */
+# if __INTEL_COMPILER < 2021 || __INTEL_COMPILER == 202110 || __INTEL_COMPILER == 202111
+#  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER/100)
+#  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER/10 % 10)
+#  if defined(__INTEL_COMPILER_UPDATE)
+#   define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER_UPDATE)
+#  else
+#   define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER   % 10)
+#  endif
+# else
+#  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER)
+#  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER_UPDATE)
+   /* The third version component from --version is an update index,
+      but no macro is provided for it.  */
+#  define COMPILER_VERSION_PATCH DEC(0)
+# endif
+# if defined(__INTEL_COMPILER_BUILD_DATE)
+   /* __INTEL_COMPILER_BUILD_DATE = YYYYMMDD */
+#  define COMPILER_VERSION_TWEAK DEC(__INTEL_COMPILER_BUILD_DATE)
+# endif
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+# if defined(__GNUC__)
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+# elif defined(__GNUG__)
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUG__)
+# endif
+# if defined(__GNUC_MINOR__)
+#  define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+# endif
+# if defined(__GNUC_PATCHLEVEL__)
+#  define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+# endif
+
+#elif (defined(__clang__) && defined(__INTEL_CLANG_COMPILER)) || defined(__INTEL_LLVM_COMPILER)
+# define COMPILER_ID "IntelLLVM"
+#if defined(_MSC_VER)
+# define SIMULATE_ID "MSVC"
+#endif
+#if defined(__GNUC__)
+# define SIMULATE_ID "GNU"
+#endif
+/* __INTEL_LLVM_COMPILER = VVVVRP prior to 2021.2.0, VVVVRRPP for 2021.2.0 and
+ * later.  Look for 6 digit vs. 8 digit version number to decide encoding.
+ * VVVV is no smaller than the current year when a version is released.
+ */
+#if __INTEL_LLVM_COMPILER < 1000000L
+# define COMPILER_VERSION_MAJOR DEC(__INTEL_LLVM_COMPILER/100)
+# define COMPILER_VERSION_MINOR DEC(__INTEL_LLVM_COMPILER/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__INTEL_LLVM_COMPILER    % 10)
+#else
+# define COMPILER_VERSION_MAJOR DEC(__INTEL_LLVM_COMPILER/10000)
+# define COMPILER_VERSION_MINOR DEC(__INTEL_LLVM_COMPILER/100 % 100)
+# define COMPILER_VERSION_PATCH DEC(__INTEL_LLVM_COMPILER     % 100)
+#endif
+#if defined(_MSC_VER)
+  /* _MSC_VER = VVRR */
+# define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+# define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+#endif
+#if defined(__GNUC__)
+# define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+#elif defined(__GNUG__)
+# define SIMULATE_VERSION_MAJOR DEC(__GNUG__)
+#endif
+#if defined(__GNUC_MINOR__)
+# define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+#endif
+#if defined(__GNUC_PATCHLEVEL__)
+# define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+#endif
+
+#elif defined(__PATHCC__)
+# define COMPILER_ID "PathScale"
+# define COMPILER_VERSION_MAJOR DEC(__PATHCC__)
+# define COMPILER_VERSION_MINOR DEC(__PATHCC_MINOR__)
+# if defined(__PATHCC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__PATHCC_PATCHLEVEL__)
+# endif
+
+#elif defined(__BORLANDC__) && defined(__CODEGEARC_VERSION__)
+# define COMPILER_ID "Embarcadero"
+# define COMPILER_VERSION_MAJOR HEX(__CODEGEARC_VERSION__>>24 & 0x00FF)
+# define COMPILER_VERSION_MINOR HEX(__CODEGEARC_VERSION__>>16 & 0x00FF)
+# define COMPILER_VERSION_PATCH DEC(__CODEGEARC_VERSION__     & 0xFFFF)
+
+#elif defined(__BORLANDC__)
+# define COMPILER_ID "Borland"
+  /* __BORLANDC__ = 0xVRR */
+# define COMPILER_VERSION_MAJOR HEX(__BORLANDC__>>8)
+# define COMPILER_VERSION_MINOR HEX(__BORLANDC__ & 0xFF)
+
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1200
+# define COMPILER_ID "Watcom"
+   /* __WATCOMC__ = VVRR */
+# define COMPILER_VERSION_MAJOR DEC(__WATCOMC__ / 100)
+# define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+# if (__WATCOMC__ % 10) > 0
+#  define COMPILER_VERSION_PATCH DEC(__WATCOMC__ % 10)
+# endif
+
+#elif defined(__WATCOMC__)
+# define COMPILER_ID "OpenWatcom"
+   /* __WATCOMC__ = VVRP + 1100 */
+# define COMPILER_VERSION_MAJOR DEC((__WATCOMC__ - 1100) / 100)
+# define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+# if (__WATCOMC__ % 10) > 0
+#  define COMPILER_VERSION_PATCH DEC(__WATCOMC__ % 10)
+# endif
+
+#elif defined(__SUNPRO_CC)
+# define COMPILER_ID "SunPro"
+# if __SUNPRO_CC >= 0x5100
+   /* __SUNPRO_CC = 0xVRRP */
+#  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_CC>>12)
+#  define COMPILER_VERSION_MINOR HEX(__SUNPRO_CC>>4 & 0xFF)
+#  define COMPILER_VERSION_PATCH HEX(__SUNPRO_CC    & 0xF)
+# else
+   /* __SUNPRO_CC = 0xVRP */
+#  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_CC>>8)
+#  define COMPILER_VERSION_MINOR HEX(__SUNPRO_CC>>4 & 0xF)
+#  define COMPILER_VERSION_PATCH HEX(__SUNPRO_CC    & 0xF)
+# endif
+
+#elif defined(__HP_aCC)
+# define COMPILER_ID "HP"
+  /* __HP_aCC = VVRRPP */
+# define COMPILER_VERSION_MAJOR DEC(__HP_aCC/10000)
+# define COMPILER_VERSION_MINOR DEC(__HP_aCC/100 % 100)
+# define COMPILER_VERSION_PATCH DEC(__HP_aCC     % 100)
+
+#elif defined(__DECCXX)
+# define COMPILER_ID "Compaq"
+  /* __DECCXX_VER = VVRRTPPPP */
+# define COMPILER_VERSION_MAJOR DEC(__DECCXX_VER/10000000)
+# define COMPILER_VERSION_MINOR DEC(__DECCXX_VER/100000  % 100)
+# define COMPILER_VERSION_PATCH DEC(__DECCXX_VER         % 10000)
+
+#elif defined(__IBMCPP__) && defined(__COMPILER_VER__)
+# define COMPILER_ID "zOS"
+  /* __IBMCPP__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+
+#elif defined(__open_xl__) && defined(__clang__)
+# define COMPILER_ID "IBMClang"
+# define COMPILER_VERSION_MAJOR DEC(__open_xl_version__)
+# define COMPILER_VERSION_MINOR DEC(__open_xl_release__)
+# define COMPILER_VERSION_PATCH DEC(__open_xl_modification__)
+# define COMPILER_VERSION_TWEAK DEC(__open_xl_ptf_fix_level__)
+# define COMPILER_VERSION_INTERNAL_STR  __clang_version__
+
+
+#elif defined(__ibmxl__) && defined(__clang__)
+# define COMPILER_ID "XLClang"
+# define COMPILER_VERSION_MAJOR DEC(__ibmxl_version__)
+# define COMPILER_VERSION_MINOR DEC(__ibmxl_release__)
+# define COMPILER_VERSION_PATCH DEC(__ibmxl_modification__)
+# define COMPILER_VERSION_TWEAK DEC(__ibmxl_ptf_fix_level__)
+
+
+#elif defined(__IBMCPP__) && !defined(__COMPILER_VER__) && __IBMCPP__ >= 800
+# define COMPILER_ID "XL"
+  /* __IBMCPP__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+
+#elif defined(__IBMCPP__) && !defined(__COMPILER_VER__) && __IBMCPP__ < 800
+# define COMPILER_ID "VisualAge"
+  /* __IBMCPP__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMCPP__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMCPP__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMCPP__    % 10)
+
+#elif defined(__NVCOMPILER)
+# define COMPILER_ID "NVHPC"
+# define COMPILER_VERSION_MAJOR DEC(__NVCOMPILER_MAJOR__)
+# define COMPILER_VERSION_MINOR DEC(__NVCOMPILER_MINOR__)
+# if defined(__NVCOMPILER_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__NVCOMPILER_PATCHLEVEL__)
+# endif
+
+#elif defined(__PGI)
+# define COMPILER_ID "PGI"
+# define COMPILER_VERSION_MAJOR DEC(__PGIC__)
+# define COMPILER_VERSION_MINOR DEC(__PGIC_MINOR__)
+# if defined(__PGIC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__PGIC_PATCHLEVEL__)
+# endif
+
+#elif defined(__clang__) && defined(__cray__)
+# define COMPILER_ID "CrayClang"
+# define COMPILER_VERSION_MAJOR DEC(__cray_major__)
+# define COMPILER_VERSION_MINOR DEC(__cray_minor__)
+# define COMPILER_VERSION_PATCH DEC(__cray_patchlevel__)
+# define COMPILER_VERSION_INTERNAL_STR __clang_version__
+
+
+#elif defined(_CRAYC)
+# define COMPILER_ID "Cray"
+# define COMPILER_VERSION_MAJOR DEC(_RELEASE_MAJOR)
+# define COMPILER_VERSION_MINOR DEC(_RELEASE_MINOR)
+
+#elif defined(__TI_COMPILER_VERSION__)
+# define COMPILER_ID "TI"
+  /* __TI_COMPILER_VERSION__ = VVVRRRPPP */
+# define COMPILER_VERSION_MAJOR DEC(__TI_COMPILER_VERSION__/1000000)
+# define COMPILER_VERSION_MINOR DEC(__TI_COMPILER_VERSION__/1000   % 1000)
+# define COMPILER_VERSION_PATCH DEC(__TI_COMPILER_VERSION__        % 1000)
+
+#elif defined(__CLANG_FUJITSU)
+# define COMPILER_ID "FujitsuClang"
+# define COMPILER_VERSION_MAJOR DEC(__FCC_major__)
+# define COMPILER_VERSION_MINOR DEC(__FCC_minor__)
+# define COMPILER_VERSION_PATCH DEC(__FCC_patchlevel__)
+# define COMPILER_VERSION_INTERNAL_STR __clang_version__
+
+
+#elif defined(__FUJITSU)
+# define COMPILER_ID "Fujitsu"
+# if defined(__FCC_version__)
+#   define COMPILER_VERSION __FCC_version__
+# elif defined(__FCC_major__)
+#   define COMPILER_VERSION_MAJOR DEC(__FCC_major__)
+#   define COMPILER_VERSION_MINOR DEC(__FCC_minor__)
+#   define COMPILER_VERSION_PATCH DEC(__FCC_patchlevel__)
+# endif
+# if defined(__fcc_version)
+#   define COMPILER_VERSION_INTERNAL DEC(__fcc_version)
+# elif defined(__FCC_VERSION)
+#   define COMPILER_VERSION_INTERNAL DEC(__FCC_VERSION)
+# endif
+
+
+#elif defined(__ghs__)
+# define COMPILER_ID "GHS"
+/* __GHS_VERSION_NUMBER = VVVVRP */
+# ifdef __GHS_VERSION_NUMBER
+# define COMPILER_VERSION_MAJOR DEC(__GHS_VERSION_NUMBER / 100)
+# define COMPILER_VERSION_MINOR DEC(__GHS_VERSION_NUMBER / 10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__GHS_VERSION_NUMBER      % 10)
+# endif
+
+#elif defined(__TASKING__)
+# define COMPILER_ID "Tasking"
+  # define COMPILER_VERSION_MAJOR DEC(__VERSION__/1000)
+  # define COMPILER_VERSION_MINOR DEC(__VERSION__ % 100)
+# define COMPILER_VERSION_INTERNAL DEC(__VERSION__)
+
+#elif defined(__ORANGEC__)
+# define COMPILER_ID "OrangeC"
+# define COMPILER_VERSION_MAJOR DEC(__ORANGEC_MAJOR__)
+# define COMPILER_VERSION_MINOR DEC(__ORANGEC_MINOR__)
+# define COMPILER_VERSION_PATCH DEC(__ORANGEC_PATCHLEVEL__)
+
+#elif defined(__RENESAS__)
+# define COMPILER_ID "Renesas"
+/* __RENESAS_VERSION__ = 0xVVRRPP00 */
+# define COMPILER_VERSION_MAJOR HEX(__RENESAS_VERSION__ >> 24 & 0xFF)
+# define COMPILER_VERSION_MINOR HEX(__RENESAS_VERSION__ >> 16 & 0xFF)
+# define COMPILER_VERSION_PATCH HEX(__RENESAS_VERSION__ >> 8  & 0xFF)
+
+#elif defined(__SCO_VERSION__)
+# define COMPILER_ID "SCO"
+
+#elif defined(__ARMCC_VERSION) && !defined(__clang__)
+# define COMPILER_ID "ARMCC"
+#if __ARMCC_VERSION >= 1000000
+  /* __ARMCC_VERSION = VRRPPPP */
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/1000000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 100)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION     % 10000)
+#else
+  /* __ARMCC_VERSION = VRPPPP */
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/100000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 10)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION    % 10000)
+#endif
+
+
+#elif defined(__clang__) && defined(__apple_build_version__)
+# define COMPILER_ID "AppleClang"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# define COMPILER_VERSION_MAJOR DEC(__clang_major__)
+# define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+# define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+# define COMPILER_VERSION_TWEAK DEC(__apple_build_version__)
+
+#elif defined(__clang__) && defined(__ARMCOMPILER_VERSION)
+# define COMPILER_ID "ARMClang"
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCOMPILER_VERSION/1000000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCOMPILER_VERSION/10000 % 100)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCOMPILER_VERSION/100   % 100)
+# define COMPILER_VERSION_INTERNAL DEC(__ARMCOMPILER_VERSION)
+
+#elif defined(__clang__) && defined(__ti__)
+# define COMPILER_ID "TIClang"
+  # define COMPILER_VERSION_MAJOR DEC(__ti_major__)
+  # define COMPILER_VERSION_MINOR DEC(__ti_minor__)
+  # define COMPILER_VERSION_PATCH DEC(__ti_patchlevel__)
+# define COMPILER_VERSION_INTERNAL DEC(__ti_version__)
+
+#elif defined(__clang__)
+# define COMPILER_ID "Clang"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# define COMPILER_VERSION_MAJOR DEC(__clang_major__)
+# define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+# define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+
+#elif defined(__LCC__) && (defined(__GNUC__) || defined(__GNUG__) || defined(__MCST__))
+# define COMPILER_ID "LCC"
+# define COMPILER_VERSION_MAJOR DEC(__LCC__ / 100)
+# define COMPILER_VERSION_MINOR DEC(__LCC__ % 100)
+# if defined(__LCC_MINOR__)
+#  define COMPILER_VERSION_PATCH DEC(__LCC_MINOR__)
+# endif
+# if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#  define SIMULATE_ID "GNU"
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+#  define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+#  if defined(__GNUC_PATCHLEVEL__)
+#   define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+#  endif
+# endif
+
+#elif defined(__GNUC__) || defined(__GNUG__)
+# define COMPILER_ID "GNU"
+# if defined(__GNUC__)
+#  define COMPILER_VERSION_MAJOR DEC(__GNUC__)
+# else
+#  define COMPILER_VERSION_MAJOR DEC(__GNUG__)
+# endif
+# if defined(__GNUC_MINOR__)
+#  define COMPILER_VERSION_MINOR DEC(__GNUC_MINOR__)
+# endif
+# if defined(__GNUC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+# endif
+
+#elif defined(_MSC_VER)
+# define COMPILER_ID "MSVC"
+  /* _MSC_VER = VVRR */
+# define COMPILER_VERSION_MAJOR DEC(_MSC_VER / 100)
+# define COMPILER_VERSION_MINOR DEC(_MSC_VER % 100)
+# if defined(_MSC_FULL_VER)
+#  if _MSC_VER >= 1400
+    /* _MSC_FULL_VER = VVRRPPPPP */
+#   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 100000)
+#  else
+    /* _MSC_FULL_VER = VVRRPPPP */
+#   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 10000)
+#  endif
+# endif
+# if defined(_MSC_BUILD)
+#  define COMPILER_VERSION_TWEAK DEC(_MSC_BUILD)
+# endif
+
+#elif defined(_ADI_COMPILER)
+# define COMPILER_ID "ADSP"
+#if defined(__VERSIONNUM__)
+  /* __VERSIONNUM__ = 0xVVRRPPTT */
+#  define COMPILER_VERSION_MAJOR DEC(__VERSIONNUM__ >> 24 & 0xFF)
+#  define COMPILER_VERSION_MINOR DEC(__VERSIONNUM__ >> 16 & 0xFF)
+#  define COMPILER_VERSION_PATCH DEC(__VERSIONNUM__ >> 8 & 0xFF)
+#  define COMPILER_VERSION_TWEAK DEC(__VERSIONNUM__ & 0xFF)
+#endif
+
+#elif defined(__IAR_SYSTEMS_ICC__) || defined(__IAR_SYSTEMS_ICC)
+# define COMPILER_ID "IAR"
+# if defined(__VER__) && defined(__ICCARM__)
+#  define COMPILER_VERSION_MAJOR DEC((__VER__) / 1000000)
+#  define COMPILER_VERSION_MINOR DEC(((__VER__) / 1000) % 1000)
+#  define COMPILER_VERSION_PATCH DEC((__VER__) % 1000)
+# elif defined(__VER__) && (defined(__ICCAVR__) || defined(__ICCRX__) || defined(__ICCRH850__) || defined(__ICCRL78__) || defined(__ICC430__) || defined(__ICCRISCV__) || defined(__ICCV850__) || defined(__ICC8051__) || defined(__ICCSTM8__))
+#  define COMPILER_VERSION_MAJOR DEC((__VER__) / 100)
+#  define COMPILER_VERSION_MINOR DEC((__VER__) - (((__VER__) / 100)*100))
+#  define COMPILER_VERSION_PATCH DEC(__SUBVERSION__)
+# endif
+# if defined(__IAR_COMPILERBASE__)
+#  define COMPILER_VERSION_INTERNAL DEC(__IAR_COMPILERBASE__)
+# else
+#  define COMPILER_VERSION_INTERNAL DEC((__IAR_SYSTEMS_ICC__ << 16))
+# endif
+
+#elif defined(__DCC__) && defined(_DIAB_TOOL)
+# define COMPILER_ID "Diab"
+  # define COMPILER_VERSION_MAJOR DEC(__VERSION_MAJOR_NUMBER__)
+  # define COMPILER_VERSION_MINOR DEC(__VERSION_MINOR_NUMBER__)
+  # define COMPILER_VERSION_PATCH DEC(__VERSION_ARCH_FEATURE_NUMBER__)
+  # define COMPILER_VERSION_TWEAK DEC(__VERSION_BUG_FIX_NUMBER__)
+
+
+
+/* These compilers are either not known or too old to define an
+  identification macro.  Try to identify the platform and guess that
+  it is the native compiler.  */
+#elif defined(__hpux) || defined(__hpua)
+# define COMPILER_ID "HP"
+
+#else /* unknown compiler */
+# define COMPILER_ID ""
+#endif
+
+/* Construct the string literal in pieces to prevent the source from
+   getting matched.  Store it in a pointer rather than an array
+   because some compilers will just produce instructions to fill the
+   array rather than assigning a pointer to a static array.  */
+char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";
+#ifdef SIMULATE_ID
+char const* info_simulate = "INFO" ":" "simulate[" SIMULATE_ID "]";
+#endif
+
+#ifdef __QNXNTO__
+char const* qnxnto = "INFO" ":" "qnxnto[]";
+#endif
+
+#if defined(__CRAYXT_COMPUTE_LINUX_TARGET)
+char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+#endif
+
+#define STRINGIFY_HELPER(X) #X
+#define STRINGIFY(X) STRINGIFY_HELPER(X)
+
+/* Identify known platforms by name.  */
+#if defined(__linux) || defined(__linux__) || defined(linux)
+# define PLATFORM_ID "Linux"
+
+#elif defined(__MSYS__)
+# define PLATFORM_ID "MSYS"
+
+#elif defined(__CYGWIN__)
+# define PLATFORM_ID "Cygwin"
+
+#elif defined(__MINGW32__)
+# define PLATFORM_ID "MinGW"
+
+#elif defined(__APPLE__)
+# define PLATFORM_ID "Darwin"
+
+#elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+# define PLATFORM_ID "Windows"
+
+#elif defined(__FreeBSD__) || defined(__FreeBSD)
+# define PLATFORM_ID "FreeBSD"
+
+#elif defined(__NetBSD__) || defined(__NetBSD)
+# define PLATFORM_ID "NetBSD"
+
+#elif defined(__OpenBSD__) || defined(__OPENBSD)
+# define PLATFORM_ID "OpenBSD"
+
+#elif defined(__sun) || defined(sun)
+# define PLATFORM_ID "SunOS"
+
+#elif defined(_AIX) || defined(__AIX) || defined(__AIX__) || defined(__aix) || defined(__aix__)
+# define PLATFORM_ID "AIX"
+
+#elif defined(__hpux) || defined(__hpux__)
+# define PLATFORM_ID "HP-UX"
+
+#elif defined(__HAIKU__)
+# define PLATFORM_ID "Haiku"
+
+#elif defined(__BeOS) || defined(__BEOS__) || defined(_BEOS)
+# define PLATFORM_ID "BeOS"
+
+#elif defined(__QNX__) || defined(__QNXNTO__)
+# define PLATFORM_ID "QNX"
+
+#elif defined(__tru64) || defined(_tru64) || defined(__TRU64__)
+# define PLATFORM_ID "Tru64"
+
+#elif defined(__riscos) || defined(__riscos__)
+# define PLATFORM_ID "RISCos"
+
+#elif defined(__sinix) || defined(__sinix__) || defined(__SINIX__)
+# define PLATFORM_ID "SINIX"
+
+#elif defined(__UNIX_SV__)
+# define PLATFORM_ID "UNIX_SV"
+
+#elif defined(__bsdos__)
+# define PLATFORM_ID "BSDOS"
+
+#elif defined(_MPRAS) || defined(MPRAS)
+# define PLATFORM_ID "MP-RAS"
+
+#elif defined(__osf) || defined(__osf__)
+# define PLATFORM_ID "OSF1"
+
+#elif defined(_SCO_SV) || defined(SCO_SV) || defined(sco_sv)
+# define PLATFORM_ID "SCO_SV"
+
+#elif defined(__ultrix) || defined(__ultrix__) || defined(_ULTRIX)
+# define PLATFORM_ID "ULTRIX"
+
+#elif defined(__XENIX__) || defined(_XENIX) || defined(XENIX)
+# define PLATFORM_ID "Xenix"
+
+#elif defined(__WATCOMC__)
+# if defined(__LINUX__)
+#  define PLATFORM_ID "Linux"
+
+# elif defined(__DOS__)
+#  define PLATFORM_ID "DOS"
+
+# elif defined(__OS2__)
+#  define PLATFORM_ID "OS2"
+
+# elif defined(__WINDOWS__)
+#  define PLATFORM_ID "Windows3x"
+
+# elif defined(__VXWORKS__)
+#  define PLATFORM_ID "VxWorks"
+
+# else /* unknown platform */
+#  define PLATFORM_ID
+# endif
+
+#elif defined(__INTEGRITY)
+# if defined(INT_178B)
+#  define PLATFORM_ID "Integrity178"
+
+# else /* regular Integrity */
+#  define PLATFORM_ID "Integrity"
+# endif
+
+# elif defined(_ADI_COMPILER)
+#  define PLATFORM_ID "ADSP"
+
+#else /* unknown platform */
+# define PLATFORM_ID
+
+#endif
+
+/* For windows compilers MSVC and Intel we can determine
+   the architecture of the compiler being used.  This is because
+   the compilers do not have flags that can change the architecture,
+   but rather depend on which compiler is being used
+*/
+#if defined(_WIN32) && defined(_MSC_VER)
+# if defined(_M_IA64)
+#  define ARCHITECTURE_ID "IA64"
+
+# elif defined(_M_ARM64EC)
+#  define ARCHITECTURE_ID "ARM64EC"
+
+# elif defined(_M_X64) || defined(_M_AMD64)
+#  define ARCHITECTURE_ID "x64"
+
+# elif defined(_M_IX86)
+#  define ARCHITECTURE_ID "X86"
+
+# elif defined(_M_ARM64)
+#  define ARCHITECTURE_ID "ARM64"
+
+# elif defined(_M_ARM)
+#  if _M_ARM == 4
+#   define ARCHITECTURE_ID "ARMV4I"
+#  elif _M_ARM == 5
+#   define ARCHITECTURE_ID "ARMV5I"
+#  else
+#   define ARCHITECTURE_ID "ARMV" STRINGIFY(_M_ARM)
+#  endif
+
+# elif defined(_M_MIPS)
+#  define ARCHITECTURE_ID "MIPS"
+
+# elif defined(_M_SH)
+#  define ARCHITECTURE_ID "SHx"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__WATCOMC__)
+# if defined(_M_I86)
+#  define ARCHITECTURE_ID "I86"
+
+# elif defined(_M_IX86)
+#  define ARCHITECTURE_ID "X86"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__IAR_SYSTEMS_ICC__) || defined(__IAR_SYSTEMS_ICC)
+# if defined(__ICCARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__ICCRX__)
+#  define ARCHITECTURE_ID "RX"
+
+# elif defined(__ICCRH850__)
+#  define ARCHITECTURE_ID "RH850"
+
+# elif defined(__ICCRL78__)
+#  define ARCHITECTURE_ID "RL78"
+
+# elif defined(__ICCRISCV__)
+#  define ARCHITECTURE_ID "RISCV"
+
+# elif defined(__ICCAVR__)
+#  define ARCHITECTURE_ID "AVR"
+
+# elif defined(__ICC430__)
+#  define ARCHITECTURE_ID "MSP430"
+
+# elif defined(__ICCV850__)
+#  define ARCHITECTURE_ID "V850"
+
+# elif defined(__ICC8051__)
+#  define ARCHITECTURE_ID "8051"
+
+# elif defined(__ICCSTM8__)
+#  define ARCHITECTURE_ID "STM8"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__ghs__)
+# if defined(__PPC64__)
+#  define ARCHITECTURE_ID "PPC64"
+
+# elif defined(__ppc__)
+#  define ARCHITECTURE_ID "PPC"
+
+# elif defined(__ARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__x86_64__)
+#  define ARCHITECTURE_ID "x64"
+
+# elif defined(__i386__)
+#  define ARCHITECTURE_ID "X86"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__clang__) && defined(__ti__)
+# if defined(__ARM_ARCH)
+#  define ARCHITECTURE_ID "ARM"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__TI_COMPILER_VERSION__)
+# if defined(__TI_ARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__MSP430__)
+#  define ARCHITECTURE_ID "MSP430"
+
+# elif defined(__TMS320C28XX__)
+#  define ARCHITECTURE_ID "TMS320C28x"
+
+# elif defined(__TMS320C6X__) || defined(_TMS320C6X)
+#  define ARCHITECTURE_ID "TMS320C6x"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+# elif defined(__ADSPSHARC__)
+#  define ARCHITECTURE_ID "SHARC"
+
+# elif defined(__ADSPBLACKFIN__)
+#  define ARCHITECTURE_ID "Blackfin"
+
+#elif defined(__TASKING__)
+
+# if defined(__CTC__) || defined(__CPTC__)
+#  define ARCHITECTURE_ID "TriCore"
+
+# elif defined(__CMCS__)
+#  define ARCHITECTURE_ID "MCS"
+
+# elif defined(__CARM__) || defined(__CPARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__CARC__)
+#  define ARCHITECTURE_ID "ARC"
+
+# elif defined(__C51__)
+#  define ARCHITECTURE_ID "8051"
+
+# elif defined(__CPCP__)
+#  define ARCHITECTURE_ID "PCP"
+
+# else
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__RENESAS__)
+# if defined(__CCRX__)
+#  define ARCHITECTURE_ID "RX"
+
+# elif defined(__CCRL__)
+#  define ARCHITECTURE_ID "RL78"
+
+# elif defined(__CCRH__)
+#  define ARCHITECTURE_ID "RH850"
+
+# else
+#  define ARCHITECTURE_ID ""
+# endif
+
+#else
+#  define ARCHITECTURE_ID
+#endif
+
+/* Convert integer to decimal digit literals.  */
+#define DEC(n)                   \
+  ('0' + (((n) / 10000000)%10)), \
+  ('0' + (((n) / 1000000)%10)),  \
+  ('0' + (((n) / 100000)%10)),   \
+  ('0' + (((n) / 10000)%10)),    \
+  ('0' + (((n) / 1000)%10)),     \
+  ('0' + (((n) / 100)%10)),      \
+  ('0' + (((n) / 10)%10)),       \
+  ('0' +  ((n) % 10))
+
+/* Convert integer to hex digit literals.  */
+#define HEX(n)             \
+  ('0' + ((n)>>28 & 0xF)), \
+  ('0' + ((n)>>24 & 0xF)), \
+  ('0' + ((n)>>20 & 0xF)), \
+  ('0' + ((n)>>16 & 0xF)), \
+  ('0' + ((n)>>12 & 0xF)), \
+  ('0' + ((n)>>8  & 0xF)), \
+  ('0' + ((n)>>4  & 0xF)), \
+  ('0' + ((n)     & 0xF))
+
+/* Construct a string literal encoding the version number. */
+#ifdef COMPILER_VERSION
+char const* info_version = "INFO" ":" "compiler_version[" COMPILER_VERSION "]";
+
+/* Construct a string literal encoding the version number components. */
+#elif defined(COMPILER_VERSION_MAJOR)
+char const info_version[] = {
+  'I', 'N', 'F', 'O', ':',
+  'c','o','m','p','i','l','e','r','_','v','e','r','s','i','o','n','[',
+  COMPILER_VERSION_MAJOR,
+# ifdef COMPILER_VERSION_MINOR
+  '.', COMPILER_VERSION_MINOR,
+#  ifdef COMPILER_VERSION_PATCH
+   '.', COMPILER_VERSION_PATCH,
+#   ifdef COMPILER_VERSION_TWEAK
+    '.', COMPILER_VERSION_TWEAK,
+#   endif
+#  endif
+# endif
+  ']','\0'};
+#endif
+
+/* Construct a string literal encoding the internal version number. */
+#ifdef COMPILER_VERSION_INTERNAL
+char const info_version_internal[] = {
+  'I', 'N', 'F', 'O', ':',
+  'c','o','m','p','i','l','e','r','_','v','e','r','s','i','o','n','_',
+  'i','n','t','e','r','n','a','l','[',
+  COMPILER_VERSION_INTERNAL,']','\0'};
+#elif defined(COMPILER_VERSION_INTERNAL_STR)
+char const* info_version_internal = "INFO" ":" "compiler_version_internal[" COMPILER_VERSION_INTERNAL_STR "]";
+#endif
+
+/* Construct a string literal encoding the version number components. */
+#ifdef SIMULATE_VERSION_MAJOR
+char const info_simulate_version[] = {
+  'I', 'N', 'F', 'O', ':',
+  's','i','m','u','l','a','t','e','_','v','e','r','s','i','o','n','[',
+  SIMULATE_VERSION_MAJOR,
+# ifdef SIMULATE_VERSION_MINOR
+  '.', SIMULATE_VERSION_MINOR,
+#  ifdef SIMULATE_VERSION_PATCH
+   '.', SIMULATE_VERSION_PATCH,
+#   ifdef SIMULATE_VERSION_TWEAK
+    '.', SIMULATE_VERSION_TWEAK,
+#   endif
+#  endif
+# endif
+  ']','\0'};
+#endif
+
+/* Construct the string literal in pieces to prevent the source from
+   getting matched.  Store it in a pointer rather than an array
+   because some compilers will just produce instructions to fill the
+   array rather than assigning a pointer to a static array.  */
+char const* info_platform = "INFO" ":" "platform[" PLATFORM_ID "]";
+char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";
+
+
+
+#define CXX_STD_98 199711L
+#define CXX_STD_11 201103L
+#define CXX_STD_14 201402L
+#define CXX_STD_17 201703L
+#define CXX_STD_20 202002L
+#define CXX_STD_23 202302L
+
+#if defined(__INTEL_COMPILER) && defined(_MSVC_LANG)
+#  if _MSVC_LANG > CXX_STD_17
+#    define CXX_STD _MSVC_LANG
+#  elif _MSVC_LANG == CXX_STD_17 && defined(__cpp_aggregate_paren_init)
+#    define CXX_STD CXX_STD_20
+#  elif _MSVC_LANG > CXX_STD_14 && __cplusplus > CXX_STD_17
+#    define CXX_STD CXX_STD_20
+#  elif _MSVC_LANG > CXX_STD_14
+#    define CXX_STD CXX_STD_17
+#  elif defined(__INTEL_CXX11_MODE__) && defined(__cpp_aggregate_nsdmi)
+#    define CXX_STD CXX_STD_14
+#  elif defined(__INTEL_CXX11_MODE__)
+#    define CXX_STD CXX_STD_11
+#  else
+#    define CXX_STD CXX_STD_98
+#  endif
+#elif defined(_MSC_VER) && defined(_MSVC_LANG)
+#  if _MSVC_LANG > __cplusplus
+#    define CXX_STD _MSVC_LANG
+#  else
+#    define CXX_STD __cplusplus
+#  endif
+#elif defined(__NVCOMPILER)
+#  if __cplusplus > CXX_STD_20 && defined(__cpp_pp_embed)
+#    define CXX_STD /*CXX_STD_26*/ (CXX_STD_23 + 1)
+#  elif __cplusplus == CXX_STD_17 && defined(__cpp_aggregate_paren_init)
+#    define CXX_STD CXX_STD_20
+#  else
+#    define CXX_STD __cplusplus
+#  endif
+#elif defined(__INTEL_COMPILER) || defined(__PGI)
+#  if __cplusplus == CXX_STD_11 && defined(__cpp_namespace_attributes)
+#    define CXX_STD CXX_STD_17
+#  elif __cplusplus == CXX_STD_11 && defined(__cpp_aggregate_nsdmi)
+#    define CXX_STD CXX_STD_14
+#  else
+#    define CXX_STD __cplusplus
+#  endif
+#elif (defined(__IBMCPP__) || defined(__ibmxl__)) && defined(__linux__)
+#  if __cplusplus == CXX_STD_11 && defined(__cpp_aggregate_nsdmi)
+#    define CXX_STD CXX_STD_14
+#  else
+#    define CXX_STD __cplusplus
+#  endif
+#elif __cplusplus == 1 && defined(__GXX_EXPERIMENTAL_CXX0X__)
+#  define CXX_STD CXX_STD_11
+#else
+#  define CXX_STD __cplusplus
+#endif
+
+const char* info_language_standard_default = "INFO" ":" "standard_default["
+#if CXX_STD > CXX_STD_23
+  "26"
+#elif CXX_STD > CXX_STD_20
+  "23"
+#elif CXX_STD > CXX_STD_17
+  "20"
+#elif CXX_STD > CXX_STD_14
+  "17"
+#elif CXX_STD > CXX_STD_11
+  "14"
+#elif CXX_STD >= CXX_STD_11
+  "11"
+#else
+  "98"
+#endif
+"]";
+
+const char* info_language_extensions_default = "INFO" ":" "extensions_default["
+#if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||           \
+     defined(__TI_COMPILER_VERSION__) || defined(__RENESAS__)) &&             \
+  !defined(__STRICT_ANSI__)
+  "ON"
+#else
+  "OFF"
+#endif
+"]";
+
+/*--------------------------------------------------------------------------*/
+
+int main(int argc, char* argv[])
+{
+  int require = 0;
+  require += info_compiler[argc];
+  require += info_platform[argc];
+  require += info_arch[argc];
+#ifdef COMPILER_VERSION_MAJOR
+  require += info_version[argc];
+#endif
+#if defined(COMPILER_VERSION_INTERNAL) || defined(COMPILER_VERSION_INTERNAL_STR)
+  require += info_version_internal[argc];
+#endif
+#ifdef SIMULATE_ID
+  require += info_simulate[argc];
+#endif
+#ifdef SIMULATE_VERSION_MAJOR
+  require += info_simulate_version[argc];
+#endif
+#if defined(__CRAYXT_COMPUTE_LINUX_TARGET)
+  require += info_cray[argc];
+#endif
+  require += info_language_standard_default[argc];
+  require += info_language_extensions_default[argc];
+  (void)argv;
+  return require;
+}
+
+
+===== FILE: .\cli\build\debug\tests\cmake_install.cmake =====
+
+# Install script for directory: C:/Users/luec-a/Documents/capcom/cli/tests
+
+# Set the install prefix
+if(NOT DEFINED CMAKE_INSTALL_PREFIX)
+  set(CMAKE_INSTALL_PREFIX "C:/Program Files (x86)/CaptainsLogCLI")
+endif()
+string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
+
+# Set the install configuration name.
+if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
+  if(BUILD_TYPE)
+    string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
+           CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
+  else()
+    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
+  endif()
+  message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
+endif()
+
+# Set the component getting installed.
+if(NOT CMAKE_INSTALL_COMPONENT)
+  if(COMPONENT)
+    message(STATUS "Install component: \"${COMPONENT}\"")
+    set(CMAKE_INSTALL_COMPONENT "${COMPONENT}")
+  else()
+    set(CMAKE_INSTALL_COMPONENT)
+  endif()
+endif()
+
+# Is this installation the result of a crosscompile?
+if(NOT DEFINED CMAKE_CROSSCOMPILING)
+  set(CMAKE_CROSSCOMPILING "FALSE")
+endif()
+
+# Set path to fallback-tool for dependency-resolution.
+if(NOT DEFINED CMAKE_OBJDUMP)
+  set(CMAKE_OBJDUMP "C:/TDM-GCC-64/bin/objdump.exe")
+endif()
+
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "C:/Users/luec-a/Documents/capcom/cli/build/debug/tests/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()
+
+
+===== FILE: .\cli\build\debug\tests\CTestTestfile.cmake =====
+
+# CMake generated Testfile for 
+# Source directory: C:/Users/luec-a/Documents/capcom/cli/tests
+# Build directory: C:/Users/luec-a/Documents/capcom/cli/build/debug/tests
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+add_test("cap_help" "C:/Users/luec-a/Documents/capcom/cli/build/debug/cap.exe" "help")
+set_tests_properties("cap_help" PROPERTIES  _BACKTRACE_TRIPLES "C:/Users/luec-a/Documents/capcom/cli/tests/CMakeLists.txt;1;add_test;C:/Users/luec-a/Documents/capcom/cli/tests/CMakeLists.txt;0;")
+add_test("cap_version" "C:/Users/luec-a/Documents/capcom/cli/build/debug/cap.exe" "version")
+set_tests_properties("cap_version" PROPERTIES  _BACKTRACE_TRIPLES "C:/Users/luec-a/Documents/capcom/cli/tests/CMakeLists.txt;2;add_test;C:/Users/luec-a/Documents/capcom/cli/tests/CMakeLists.txt;0;")
+
+
+===== FILE: .\cli\include\capcom\audit\history_service.hpp =====
+
+#pragma once
+
+#include "capcom/identity/identity_manager.hpp"
+
+#include <filesystem>
+#include <string>
+
+namespace capcom::audit {
+
+class HistoryService final {
+public:
+    explicit HistoryService(capcom::identity::Identity identity);
+
+    void append(
+        const std::filesystem::path& yaml_file,
+        const std::string& uid,
+        const std::string& action,
+        const std::string& reason = {}) const;
+
+    // Verifies signatures and chain. Content changes since the latest valid
+    // signature are allowed so that cap sign can authorize manual YAML edits.
+    void verify_history_chain(
+        const std::filesystem::path& yaml_file,
+        const std::string& uid) const;
+
+    // Verifies signatures, chain and the current YAML content hash.
+    void verify_file(
+        const std::filesystem::path& yaml_file,
+        const std::string& uid) const;
+
+    void verify_project(const std::filesystem::path& project) const;
+
+    [[nodiscard]] bool has_unsigned_content_changes(
+        const std::filesystem::path& yaml_file,
+        const std::string& uid) const;
+
+    [[nodiscard]] std::string current_content_hash(
+        const std::filesystem::path& yaml_file) const;
+
+    [[nodiscard]] std::string latest_signed_content_hash(
+        const std::filesystem::path& yaml_file) const;
+
+private:
+    capcom::identity::Identity identity_;
+};
+
+} // namespace capcom::audit
+
+
+===== FILE: .\cli\include\capcom\cli\command_parser.hpp =====
+
+#pragma once
+
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace capcom::cli {
+
+enum class CommandType {
+    help,
+    version,
+    init,
+    create,
+    link,
+    unlink,
+    tree,
+    scan,
+    status,
+    validate,
+    test_import,
+    verify,
+    sign,
+    diff,
+    publish,
+    review,
+    review_check,
+    approve,
+    reject,
+    unknown
+};
+
+struct Command {
+    CommandType type{CommandType::unknown};
+    std::vector<std::string> arguments;
+};
+
+class CommandParser final {
+public:
+    [[nodiscard]] Command parse(int argc, const char* const argv[]) const;
+    [[nodiscard]] static std::string_view help_text() noexcept;
+};
+
+} // namespace capcom::cli
+
+
+===== FILE: .\cli\include\capcom\commands\create_command.hpp =====
+
+#pragma once
+
+#include <filesystem>
+#include <optional>
+#include <string>
+
+namespace capcom::commands {
+
+class CreateCommand final {
+public:
+    int execute(
+        const std::filesystem::path& project,
+        std::string type,
+        const std::string& title,
+        const std::optional<std::string>& parent_uid = std::nullopt) const;
+};
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\include\capcom\commands\init_command.hpp =====
+
+#pragma once
+#include <filesystem>
+namespace capcom::commands {
+class InitCommand final { public: int execute(const std::filesystem::path& target) const; };
+}
+
+
+===== FILE: .\cli\include\capcom\commands\link_command.hpp =====
+
+#pragma once
+#include <filesystem>
+#include <string>
+namespace capcom::commands { class LinkCommand final { public: int execute(const std::filesystem::path&,const std::string&,const std::string&,bool) const; }; }
+
+
+===== FILE: .\cli\include\capcom\commands\manual_commands.hpp =====
+
+#pragma once
+#include <filesystem>
+#include <string>
+namespace capcom::commands {
+class SignCommand final {
+public:
+    int execute(const std::filesystem::path& project,
+                const std::string& uid,
+                const std::string& reason) const;
+};
+class DiffCommand final {
+public:
+    int execute(const std::filesystem::path& project,
+                const std::string& uid) const;
+};
+}
+
+
+===== FILE: .\cli\include\capcom\commands\publish_command.hpp =====
+
+#pragma once
+
+#include <filesystem>
+
+namespace capcom::commands {
+
+class PublishCommand final {
+public:
+    int execute(const std::filesystem::path& project) const;
+};
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\include\capcom\commands\review_command.hpp =====
+
+#pragma once
+
+#include <filesystem>
+#include <string>
+
+namespace capcom::commands {
+
+enum class ReviewAction {
+    submit,
+    approve,
+    reject,
+    check
+};
+
+class ReviewCommand final {
+public:
+    int execute(
+        const std::filesystem::path& project,
+        const std::string& uid,
+        ReviewAction action,
+        const std::string& reason = {}) const;
+};
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\include\capcom\commands\security_commands.hpp =====
+
+#pragma once
+#include <filesystem>
+namespace capcom::commands {
+class VerifyCommand final {
+public:
+    int execute(const std::filesystem::path& project) const;
+};
+}
+
+
+===== FILE: .\cli\include\capcom\commands\tree_command.hpp =====
+
+#pragma once
+#include <filesystem>
+namespace capcom::commands { class TreeCommand final { public: int execute(const std::filesystem::path&) const; }; }
+
+
+===== FILE: .\cli\include\capcom\commands\yaml_commands.hpp =====
+
+#pragma once
+#include <filesystem>
+namespace capcom::commands {
+class ScanCommand final{public:int execute(const std::filesystem::path&)const;};
+class StatusCommand final{public:int execute(const std::filesystem::path&)const;};
+class TestImportCommand final{public:int execute(const std::filesystem::path&,const std::filesystem::path&)const;};
+class ValidateCommand final{public:int execute(const std::filesystem::path&)const;};
+}
+
+
+===== FILE: .\cli\include\capcom\config\app_config.hpp =====
+
+#pragma once
+#include <filesystem>
+#include <string>
+namespace capcom::config {
+struct AppConfig { std::string api_url{"http://127.0.0.1:8000"}; std::string requirements_directory{"reqs"}; };
+class ConfigLoader final {
+public:
+    [[nodiscard]] AppConfig load(const std::filesystem::path& project_directory) const;
+    void write_default(const std::filesystem::path& project_directory) const;
+};
+}
+
+
+===== FILE: .\cli\include\capcom\http\http_client.hpp =====
+
+#pragma once
+#include <chrono>
+#include <string>
+#include <string_view>
+namespace capcom::http {
+struct HttpResponse { long status_code{}; std::string body; };
+struct HttpClientOptions { std::string base_url{"http://127.0.0.1:8000"}; std::string api_key; std::chrono::milliseconds timeout{10000}; };
+class HttpClient final { public: explicit HttpClient(HttpClientOptions options); [[nodiscard]] HttpResponse post_json(std::string_view route, std::string_view json_body) const; private: HttpClientOptions options_; };
+}
+
+
+===== FILE: .\cli\include\capcom\identity\identity_manager.hpp =====
+
+#pragma once
+#include <string>
+namespace capcom::identity {
+struct Identity {
+    std::string full_name;
+    std::string host_id;
+    std::string key_name;
+    std::string key_id;
+    std::string algorithm;
+    std::string public_key_base64;
+};
+class IdentityManager final {
+public:
+    [[nodiscard]] Identity load_or_create() const;
+};
+}
+
+
+===== FILE: .\cli\include\capcom\requirements\requirement_store.hpp =====
+
+#pragma once
+#include <filesystem>
+#include <map>
+#include <string>
+#include <vector>
+namespace capcom::requirements {
+struct Requirement { std::string uid, type, title, status; std::vector<std::string> parents, children; std::filesystem::path file; };
+class RequirementStore final {
+public:
+ explicit RequirementStore(std::filesystem::path project);
+ [[nodiscard]] std::map<std::string, Requirement> load_all() const;
+ void add_link(const std::string& child, const std::string& parent) const;
+ void remove_link(const std::string& child, const std::string& parent) const;
+private: std::filesystem::path project_;
+};
+}
+
+
+===== FILE: .\cli\include\capcom\security\crypto.hpp =====
+
+#pragma once
+#include <string>
+#include <string_view>
+namespace capcom::security {
+[[nodiscard]] std::string sha256_hex(std::string_view data);
+[[nodiscard]] std::string sign_rsa_pss_sha256(
+    const std::string& key_name, std::string_view payload);
+[[nodiscard]] bool verify_rsa_pss_sha256(
+    const std::string& public_key_base64,
+    std::string_view payload,
+    const std::string& signature_base64);
+[[nodiscard]] std::string random_hex(std::size_t bytes);
+}
+
+
+===== FILE: .\cli\include\capcom\yaml\yaml_store.hpp =====
+
+#pragma once
+#include <filesystem>
+#include <map>
+#include <string>
+#include <vector>
+namespace capcom::yaml {
+struct Implementation { std::string file; int start_line{}; int end_line{}; std::string git_hash; };
+struct TestResult { std::string status; std::string source; std::string timestamp; std::string message; };
+struct Item {
+ std::string uid,type,status,title,text,rationale,version,git_hash;
+ std::map<std::string,std::string> attributes;
+ std::vector<std::string> parents,children;
+ std::vector<Implementation> implementations;
+ TestResult test;
+ std::filesystem::path file;
+};
+class YamlStore final {
+public:
+ explicit YamlStore(std::filesystem::path project);
+ [[nodiscard]] std::map<std::string,Item> load_all() const;
+ void replace_implementations(const std::map<std::string,std::vector<Implementation>>& values) const;
+ void update_test(const std::string& uid,const TestResult& result) const;
+ [[nodiscard]] std::vector<std::string> validate(const std::map<std::string,Item>& items) const;
+private: std::filesystem::path project_;
+};
+[[nodiscard]] std::string normalize_uid(std::string value);
+}
+
+
+===== FILE: .\cli\src\main.cpp =====
+
+#include "capcom/cli/command_parser.hpp"
+#include "capcom/commands/create_command.hpp"
+#include "capcom/commands/init_command.hpp"
+#include "capcom/commands/link_command.hpp"
+#include "capcom/commands/manual_commands.hpp"
+#include "capcom/commands/security_commands.hpp"
+#include "capcom/commands/tree_command.hpp"
+#include "capcom/commands/yaml_commands.hpp"
+#include "capcom/commands/publish_command.hpp"
+#include "capcom/commands/review_command.hpp"
+
+#include <filesystem>
+#include <iostream>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
+namespace
+{
+
+    struct CreateArguments
+    {
+        std::string type;
+        std::string title;
+        std::optional<std::string> parent_uid;
+    };
+
+    CreateArguments parse_create_arguments(
+        const std::vector<std::string> &arguments)
+    {
+        if (arguments.empty())
+        {
+            throw std::runtime_error(
+                "Usage: cap create <type> [title] [-p <parent_uid>]");
+        }
+
+        CreateArguments result{};
+        result.type = arguments.front();
+
+        for (std::size_t index = 1; index < arguments.size(); ++index)
+        {
+            const auto &argument = arguments[index];
+
+            if (argument == "-p" || argument == "--parent")
+            {
+                if (result.parent_uid.has_value())
+                {
+                    throw std::runtime_error("Parent was supplied more than once.");
+                }
+                if (index + 1 >= arguments.size())
+                {
+                    throw std::runtime_error("Missing UID after -p/--parent.");
+                }
+                result.parent_uid = arguments[++index];
+                continue;
+            }
+
+            if (!result.title.empty())
+            {
+                throw std::runtime_error(
+                    "Title must be quoted when it contains spaces.");
+            }
+            result.title = argument;
+        }
+
+        if (result.title.empty())
+        {
+            std::cout << "Titel: " << std::flush;
+            std::getline(std::cin, result.title);
+            if (!std::cin || result.title.empty())
+            {
+                throw std::runtime_error("A title is required.");
+            }
+        }
+
+        return result;
+    }
+
+    struct SignArguments
+    {
+        std::string uid;
+        std::string reason;
+    };
+
+    SignArguments parse_sign_arguments(
+        const std::vector<std::string> &arguments)
+    {
+        if (arguments.size() != 3 ||
+            (arguments[1] != "-m" && arguments[1] != "--message"))
+        {
+            throw std::runtime_error(
+                "Usage: cap sign <uid> -m \"change reason\"");
+        }
+
+        return {arguments[0], arguments[2]};
+    }
+
+    struct ReviewArguments
+    {
+        std::string uid;
+        std::string reason;
+    };
+
+    ReviewArguments parse_review_arguments(
+        const std::vector<std::string> &arguments)
+    {
+        if (
+            arguments.size() != 3 ||
+            (arguments[1] != "-m" &&
+             arguments[1] != "--message"))
+        {
+            throw std::runtime_error(
+                "Usage: cap review|approve|reject "
+                "<uid> -m \"reason\"");
+        }
+
+        return {
+            arguments[0],
+            arguments[2]};
+    }
+
+#ifdef _WIN32
+
+    std::string wide_to_utf8(const std::wstring &value)
+    {
+        if (value.empty())
+        {
+            return {};
+        }
+
+        const int required_size = WideCharToMultiByte(
+            CP_UTF8,
+            0,
+            value.data(),
+            static_cast<int>(value.size()),
+            nullptr,
+            0,
+            nullptr,
+            nullptr);
+
+        if (required_size <= 0)
+        {
+            throw std::runtime_error(
+                "Windows command-line conversion to UTF-8 failed.");
+        }
+
+        std::string result(
+            static_cast<std::size_t>(required_size),
+            '\0');
+
+        const int converted_size = WideCharToMultiByte(
+            CP_UTF8,
+            0,
+            value.data(),
+            static_cast<int>(value.size()),
+            result.data(),
+            required_size,
+            nullptr,
+            nullptr);
+
+        if (converted_size != required_size)
+        {
+            throw std::runtime_error(
+                "Windows command-line conversion to UTF-8 was incomplete.");
+        }
+
+        return result;
+    }
+
+    std::vector<std::string> windows_utf8_arguments()
+    {
+        int argument_count = 0;
+        wchar_t **wide_arguments = CommandLineToArgvW(
+            GetCommandLineW(),
+            &argument_count);
+
+        if (wide_arguments == nullptr)
+        {
+            throw std::runtime_error(
+                "Windows command-line arguments could not be read.");
+        }
+
+        std::vector<std::string> arguments;
+        arguments.reserve(static_cast<std::size_t>(argument_count));
+
+        try
+        {
+            for (int index = 0; index < argument_count; ++index)
+            {
+                arguments.push_back(wide_to_utf8(wide_arguments[index]));
+            }
+        }
+        catch (...)
+        {
+            LocalFree(wide_arguments);
+            throw;
+        }
+
+        LocalFree(wide_arguments);
+        return arguments;
+    }
+
+#endif
+
+} // namespace
+
+int main(const int argc, const char *const argv[])
+{
+    try
+    {
+#ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+
+        const auto utf8_arguments = windows_utf8_arguments();
+        std::vector<const char *> utf8_argv;
+        utf8_argv.reserve(utf8_arguments.size());
+
+        for (const auto &argument : utf8_arguments)
+        {
+            utf8_argv.push_back(argument.c_str());
+        }
+
+        const auto command = capcom::cli::CommandParser{}.parse(
+            static_cast<int>(utf8_argv.size()),
+            utf8_argv.data());
+#else
+        const auto command = capcom::cli::CommandParser{}.parse(argc, argv);
+#endif
+
+        switch (command.type)
+        {
+        case capcom::cli::CommandType::help:
+            std::cout << capcom::cli::CommandParser::help_text();
+            return 0;
+
+        case capcom::cli::CommandType::version:
+            std::cout << "Captain's Log CLI 0.7.0\n";
+            return 0;
+
+        case capcom::cli::CommandType::init:
+        {
+            if (command.arguments.size() > 1)
+            {
+                throw std::runtime_error("Usage: cap init [directory]");
+            }
+            const auto target = command.arguments.empty()
+                                    ? std::filesystem::current_path()
+                                    : std::filesystem::path{command.arguments.front()};
+            return capcom::commands::InitCommand{}.execute(target);
+        }
+
+        case capcom::cli::CommandType::create:
+        {
+            const auto create = parse_create_arguments(command.arguments);
+            return capcom::commands::CreateCommand{}.execute(
+                std::filesystem::current_path(),
+                create.type,
+                create.title,
+                create.parent_uid);
+        }
+
+        case capcom::cli::CommandType::link:
+        case capcom::cli::CommandType::unlink:
+            if (command.arguments.size() != 2)
+            {
+                throw std::runtime_error(
+                    "Usage: cap link|unlink <child_uid> <parent_uid>");
+            }
+            return capcom::commands::LinkCommand{}.execute(
+                std::filesystem::current_path(),
+                command.arguments[0],
+                command.arguments[1],
+                command.type == capcom::cli::CommandType::unlink);
+
+        case capcom::cli::CommandType::tree:
+            if (!command.arguments.empty())
+            {
+                throw std::runtime_error("Usage: cap tree");
+            }
+            return capcom::commands::TreeCommand{}.execute(
+                std::filesystem::current_path());
+
+        case capcom::cli::CommandType::scan:
+            return capcom::commands::ScanCommand{}.execute(
+                std::filesystem::current_path());
+
+        case capcom::cli::CommandType::status:
+            return capcom::commands::StatusCommand{}.execute(
+                std::filesystem::current_path());
+
+        case capcom::cli::CommandType::validate:
+            return capcom::commands::ValidateCommand{}.execute(
+                std::filesystem::current_path());
+
+        case capcom::cli::CommandType::test_import:
+            if (command.arguments.size() != 1)
+            {
+                throw std::runtime_error(
+                    "Usage: cap test import <result-file>");
+            }
+            return capcom::commands::TestImportCommand{}.execute(
+                std::filesystem::current_path(),
+                command.arguments.front());
+
+        case capcom::cli::CommandType::verify:
+            if (!command.arguments.empty())
+            {
+                throw std::runtime_error("Usage: cap verify");
+            }
+            return capcom::commands::VerifyCommand{}.execute(
+                std::filesystem::current_path());
+
+        case capcom::cli::CommandType::diff:
+            if (command.arguments.size() != 1)
+            {
+                throw std::runtime_error("Usage: cap diff <uid>");
+            }
+            return capcom::commands::DiffCommand{}.execute(
+                std::filesystem::current_path(),
+                command.arguments.front());
+
+        case capcom::cli::CommandType::sign:
+        {
+            const auto sign = parse_sign_arguments(command.arguments);
+            return capcom::commands::SignCommand{}.execute(
+                std::filesystem::current_path(),
+                sign.uid,
+                sign.reason);
+        }
+        case capcom::cli::CommandType::publish:
+            if (!command.arguments.empty())
+            {
+                throw std::runtime_error("Usage: cap publish");
+            }
+            return capcom::commands::PublishCommand{}.execute(std::filesystem::current_path());
+
+        case capcom::cli::CommandType::unknown:
+            throw std::runtime_error("Unknown command. Run 'cap help'.");
+
+        case capcom::cli::CommandType::review_check:
+            if (command.arguments.size() != 1)
+            {
+                throw std::runtime_error(
+                    "Usage: cap review-check <uid>");
+            }
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                command.arguments[0],
+                capcom::commands::ReviewAction::check);
+
+        case capcom::cli::CommandType::review:
+        {
+            const auto review =
+                parse_review_arguments(command.arguments);
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                review.uid,
+                capcom::commands::ReviewAction::submit,
+                review.reason);
+        }
+
+        case capcom::cli::CommandType::reject:
+        {
+            const auto review =
+                parse_review_arguments(command.arguments);
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                review.uid,
+                capcom::commands::ReviewAction::reject,
+                review.reason);
+        }
+        }
+    }
+    catch (const std::exception &error)
+    {
+        std::cerr << "Error: " << error.what() << '\n';
+        return 2;
+    }
+
+    return 2;
+}
+
+
+===== FILE: .\cli\src\audit\history_service.cpp =====
+
+#include "capcom/audit/history_service.hpp"
+#include "capcom/security/crypto.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
+
+namespace capcom::audit {
+namespace {
+
+std::string timestamp_utc() {
+    const auto time = std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now());
+    std::tm utc{};
+#ifdef _WIN32
+    gmtime_s(&utc, &time);
+#else
+    gmtime_r(&time, &utc);
+#endif
+    std::ostringstream output;
+    output << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
+    return output.str();
+}
+
+std::string yaml_quote(const std::string& value) {
+    std::string output{"\""};
+    for (const char character : value) {
+        if (character == '\\' || character == '"') output.push_back('\\');
+        if (character == '\n') output += "\\n";
+        else if (character != '\r') output.push_back(character);
+    }
+    output.push_back('"');
+    return output;
+}
+
+std::string yaml_unquote(std::string value) {
+    const auto first = value.find_first_not_of(" \t");
+    value = first == std::string::npos ? std::string{} : value.substr(first);
+    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.size() - 2);
+    }
+    return value;
+}
+
+std::vector<std::string> read_lines(const std::filesystem::path& file) {
+    std::ifstream input(file, std::ios::binary);
+    if (!input) throw std::runtime_error("Cannot read " + file.string());
+    std::vector<std::string> result;
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        result.push_back(line);
+    }
+    return result;
+}
+
+void save_atomic(
+    const std::filesystem::path& file,
+    const std::vector<std::string>& lines) {
+    auto temporary = file;
+    temporary += ".audit.tmp";
+    {
+        std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
+        if (!output) throw std::runtime_error("Cannot write " + temporary.string());
+        for (const auto& line : lines) output << line << '\n';
+        if (!output) throw std::runtime_error("Failed writing " + temporary.string());
+    }
+    std::error_code error;
+    std::filesystem::remove(file, error);
+    error.clear();
+    std::filesystem::rename(temporary, file, error);
+    if (error) throw std::runtime_error("Cannot update audit history: " + error.message());
+}
+
+std::string content_without_history(const std::vector<std::string>& lines) {
+    std::ostringstream output;
+    bool inside_history = false;
+    for (const auto& line : lines) {
+        if (line.rfind("history:", 0) == 0) {
+            inside_history = true;
+            continue;
+        }
+        if (inside_history && !line.empty() && line.front() != ' ' && line.front() != '\t') {
+            inside_history = false;
+        }
+        if (!inside_history) output << line << '\n';
+    }
+    return output.str();
+}
+
+std::string scalar_value(const std::string& line) {
+    const auto colon = line.find(':');
+    if (colon == std::string::npos) return {};
+    return yaml_unquote(line.substr(colon + 1));
+}
+
+std::string canonical_payload(
+    const std::string& uid,
+    const std::string& time,
+    const std::string& action,
+    const std::string& actor,
+    const std::string& host_id,
+    const std::string& key_id,
+    const std::string& content_hash,
+    const std::string& previous_signature,
+    const std::string& reason) {
+    return
+        "CAPTAINS-LOG-HISTORY-V2\n"
+        "uid=" + uid + "\n"
+        "timestamp=" + time + "\n"
+        "action=" + action + "\n"
+        "actor=" + actor + "\n"
+        "host_id=" + host_id + "\n"
+        "key_id=" + key_id + "\n"
+        "content_hash=" + content_hash + "\n"
+        "previous_signature=" + previous_signature + "\n"
+        "reason=" + reason + "\n";
+}
+
+struct ParsedHistory {
+    int count{};
+    std::string latest_signature{"GENESIS"};
+    std::string latest_content_hash;
+};
+
+ParsedHistory verify_chain(
+    const std::vector<std::string>& lines,
+    const std::string& uid) {
+    ParsedHistory result{};
+    std::map<std::string, std::string> entry;
+    bool inside_history = false;
+
+    auto verify_entry = [&]() {
+        if (entry.empty()) return;
+        ++result.count;
+        const auto reason = entry.contains("reason") ? entry["reason"] : std::string{};
+        const auto payload = canonical_payload(
+            uid,
+            entry["timestamp"],
+            entry["action"],
+            entry["actor"],
+            entry["host_id"],
+            entry["key_id"],
+            entry["content_hash"],
+            entry["previous_signature"],
+            reason);
+
+        if (entry["previous_signature"] != result.latest_signature ||
+            !capcom::security::verify_rsa_pss_sha256(
+                entry["public_key"], payload, entry["signature"])) {
+            throw std::runtime_error(
+                "SECURITY ALERT: Tampering detected in requirement " + uid +
+                "! History entry signature invalid.");
+        }
+        result.latest_signature = entry["signature"];
+        result.latest_content_hash = entry["content_hash"];
+        entry.clear();
+    };
+
+    for (const auto& line : lines) {
+        if (line.rfind("history:", 0) == 0) {
+            inside_history = true;
+            continue;
+        }
+        if (!inside_history) continue;
+        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
+
+        auto trimmed = line;
+        const auto first = trimmed.find_first_not_of(" \t-");
+        if (first == std::string::npos) continue;
+        trimmed.erase(0, first);
+        const auto colon = trimmed.find(':');
+        if (colon == std::string::npos) continue;
+        const auto key = trimmed.substr(0, colon);
+        if (key == "timestamp" && !entry.empty()) verify_entry();
+        entry[key] = scalar_value(trimmed);
+    }
+    verify_entry();
+
+    if (result.count == 0) {
+        throw std::runtime_error(
+            "SECURITY ALERT: Unsigned history in requirement " + uid);
+    }
+    return result;
+}
+
+} // namespace
+
+HistoryService::HistoryService(capcom::identity::Identity identity)
+    : identity_{std::move(identity)} {}
+
+std::string HistoryService::current_content_hash(
+    const std::filesystem::path& file) const {
+    return capcom::security::sha256_hex(
+        content_without_history(read_lines(file)));
+}
+
+std::string HistoryService::latest_signed_content_hash(
+    const std::filesystem::path& file) const {
+    std::ifstream input(file);
+    std::string line;
+    std::string latest;
+    while (std::getline(input, line)) {
+        auto trimmed = line;
+        const auto first = trimmed.find_first_not_of(" \t-");
+        if (first == std::string::npos) continue;
+        trimmed.erase(0, first);
+        if (trimmed.rfind("content_hash:", 0) == 0) latest = scalar_value(trimmed);
+    }
+    return latest;
+}
+
+bool HistoryService::has_unsigned_content_changes(
+    const std::filesystem::path& file,
+    const std::string& uid) const {
+    verify_history_chain(file, uid);
+    return current_content_hash(file) != latest_signed_content_hash(file);
+}
+
+void HistoryService::append(
+    const std::filesystem::path& file,
+    const std::string& uid,
+    const std::string& action,
+    const std::string& reason) const {
+    auto lines = read_lines(file);
+    std::string previous = "GENESIS";
+    bool has_history = false;
+    for (const auto& line : lines) {
+        auto trimmed = line;
+        const auto first = trimmed.find_first_not_of(" \t-");
+        if (first == std::string::npos) continue;
+        trimmed.erase(0, first);
+        if (trimmed.rfind("signature:", 0) == 0) {
+            previous = scalar_value(trimmed);
+            has_history = true;
+        }
+    }
+    if (has_history) verify_history_chain(file, uid);
+
+    const auto time = timestamp_utc();
+    const auto content_hash = capcom::security::sha256_hex(
+        content_without_history(lines));
+    const auto payload = canonical_payload(
+        uid, time, action, identity_.full_name, identity_.host_id,
+        identity_.key_id, content_hash, previous, reason);
+    const auto signature = capcom::security::sign_rsa_pss_sha256(
+        identity_.key_name, payload);
+
+    auto history = std::find_if(lines.begin(), lines.end(), [](const auto& line) {
+        return line.rfind("history:", 0) == 0;
+    });
+    if (history == lines.end()) {
+        auto insertion = std::find_if(lines.begin(), lines.end(), [](const auto& line) {
+            return line.rfind("integration_template:", 0) == 0;
+        });
+        history = lines.insert(insertion, "history:");
+    }
+    auto end = history + 1;
+    while (end != lines.end() &&
+           (end->empty() || end->front() == ' ' || end->front() == '\t')) {
+        ++end;
+    }
+
+    const std::vector<std::string> block{
+        "  - timestamp: " + yaml_quote(time),
+        "    action: " + yaml_quote(action),
+        "    actor: " + yaml_quote(identity_.full_name),
+        "    host_id: " + yaml_quote(identity_.host_id),
+        "    key_id: " + yaml_quote(identity_.key_id),
+        "    algorithm: \"RSA-PSS-SHA256\"",
+        "    public_key: " + yaml_quote(identity_.public_key_base64),
+        "    content_hash: " + yaml_quote(content_hash),
+        "    previous_signature: " + yaml_quote(previous),
+        "    reason: " + yaml_quote(reason),
+        "    signature: " + yaml_quote(signature),
+    };
+    lines.insert(end, block.begin(), block.end());
+    save_atomic(file, lines);
+}
+
+void HistoryService::verify_history_chain(
+    const std::filesystem::path& file,
+    const std::string& uid) const {
+    (void)verify_chain(read_lines(file), uid);
+}
+
+void HistoryService::verify_file(
+    const std::filesystem::path& file,
+    const std::string& uid) const {
+    const auto lines = read_lines(file);
+    const auto history = verify_chain(lines, uid);
+    const auto current = capcom::security::sha256_hex(
+        content_without_history(lines));
+    if (history.latest_content_hash != current) {
+        throw std::runtime_error(
+            "UNSIGNED CHANGES: " + uid +
+            " was edited after its last valid signature. Run 'cap sign " +
+            uid + "'.");
+    }
+}
+
+void HistoryService::verify_project(const std::filesystem::path& project) const {
+    const auto directory = project / "reqs";
+    if (!std::filesystem::is_directory(directory)) {
+        throw std::runtime_error("Requirements directory not found. Run 'cap init'.");
+    }
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (!entry.is_regular_file()) continue;
+        const auto extension = entry.path().extension().string();
+        if (extension != ".yaml" && extension != ".yml") continue;
+        std::ifstream input(entry.path());
+        std::string line;
+        std::string uid;
+        while (std::getline(input, line)) {
+            if (line.rfind("uid:", 0) == 0) {
+                uid = yaml_unquote(line.substr(4));
+                break;
+            }
+        }
+        verify_file(entry.path(), uid);
+    }
+}
+
+} // namespace capcom::audit
+
+
+===== FILE: .\cli\src\cli\command_parser.cpp =====
+
+#include "capcom/cli/command_parser.hpp"
+
+namespace capcom::cli
+{
+
+    Command CommandParser::parse(
+        const int argc,
+        const char *const argv[]) const
+    {
+
+        if (argc < 2)
+        {
+            return {CommandType::help, {}};
+        }
+
+        const std::string_view name{argv[1]};
+        Command result{};
+        int first_argument = 2;
+
+        if (name == "help" || name == "--help" || name == "-h")
+        {
+            result.type = CommandType::help;
+        }
+        else if (name == "version" || name == "--version" || name == "-v")
+        {
+            result.type = CommandType::version;
+        }
+        else if (name == "init" || name == "-i")
+        {
+            result.type = CommandType::init;
+        }
+        else if (name == "create" || name == "-c")
+        {
+            result.type = CommandType::create;
+        }
+        else if (name == "link" || name == "-l")
+        {
+            result.type = CommandType::link;
+        }
+        else if (name == "unlink" || name == "-u")
+        {
+            result.type = CommandType::unlink;
+        }
+        else if (name == "tree" || name == "-t")
+        {
+            result.type = CommandType::tree;
+        }
+        else if (name == "scan" || name == "-s")
+        {
+            result.type = CommandType::scan;
+        }
+        else if (name == "status" || name == "-st")
+        {
+            result.type = CommandType::status;
+        }
+        else if (name == "validate")
+        {
+            result.type = CommandType::validate;
+        }
+        else if (name == "verify")
+        {
+            result.type = CommandType::verify;
+        }
+        else if (name == "sign")
+        {
+            result.type = CommandType::sign;
+        }
+        else if (name == "diff")
+        {
+            result.type = CommandType::diff;
+        }
+        else if (name == "publish")
+        {
+            result.type = CommandType::publish;
+        }
+        else if (name == "review")
+        {
+            result.type = CommandType::review;
+        }
+        else if (name == "review-check")
+        {
+            result.type = CommandType::review_check;
+        }
+        else if (name == "approve")
+        {
+            result.type = CommandType::approve;
+        }
+        else if (name == "reject")
+        {
+            result.type = CommandType::reject;
+        }
+        else if (
+            name == "test" &&
+            argc >= 3 &&
+            std::string_view{argv[2]} == "import")
+        {
+            result.type = CommandType::test_import;
+            first_argument = 3;
+        }
+
+        for (int index = first_argument; index < argc; ++index)
+        {
+            result.arguments.emplace_back(argv[index]);
+        }
+
+        return result;
+    }
+
+    std::string_view CommandParser::help_text() noexcept
+    {
+        return "Captain's Log CLI 0.7.0\n"
+               "YAML-First Requirements & Traceability\n"
+               "\n"
+               "VERWENDUNG\n"
+               "  cap <Befehl> [Argumente]\n"
+               "\n"
+               "BEFEHLSUEBERSICHT\n"
+               "  cap init [Ordner]                         Projekt initialisieren\n"
+               "  cap create <Typ> [Titel] [-p <Parent>]    Anforderung erstellen\n"
+               "  cap link <Child> <Parent>                 Anforderungen verknuepfen\n"
+               "  cap unlink <Child> <Parent>               Verknuepfung entfernen\n"
+               "  cap tree                                  Anforderungsbaum anzeigen\n"
+               "  cap status                                Projektstatus anzeigen\n"
+               "  cap scan                                  Implementierungen suchen\n"
+               "  cap test import <Datei>                   Testergebnisse importieren\n"
+               "  cap validate                              Pflichtfelder und Links pruefen\n"
+               "  cap diff <UID>                            YAML-Aenderungen anzeigen\n"
+               "  cap sign <UID> -m <Grund>                 YAML-Aenderungen signieren\n"
+               "  cap verify                                Audit-Signaturen pruefen\n"
+               "  cap help                                  Hilfe anzeigen\n"
+               "  cap version                               Version anzeigen\n"
+               "  cap publish                               HTML-Report erzeugen\n"
+               "  cap review-check <UID>                   Review-Bereitschaft prüfen\n"
+               "  cap review <UID> -m <Grund>              Zur Prüfung einreichen\n"
+               "  cap approve <UID> -m <Ergebnis>          Anforderung freigeben\n"
+               "  cap reject <UID> -m <Grund>              Anforderung ablehnen\n"
+               "\n"
+               "KURZBEFEHLE\n"
+               "  -i init   -c create   -l link   -u unlink   -t tree\n"
+               "  -s scan   -st status  -h help   -v version\n"
+               "\n"
+               "TYPISCHER WORKFLOW\n"
+               "  1. cap init\n"
+               "  2. cap -c usr \"Nutzeranforderung\"\n"
+               "  3. cap -c srs \"Softwareanforderung\"\n"
+               "  4. cap -l SRS-001 USR-001\n"
+               "  5. YAML bearbeiten und Pflichtfelder ausfuellen\n"
+               "  6. cap diff SRS-001\n"
+               "  7. cap sign SRS-001 -m \"Anforderung vervollstaendigt\"\n"
+               "  8. Code mit @cap-start und @cap-end markieren\n"
+               "  9. cap scan\n"
+               " 10. cap test import reports/test_results.xml\n"
+               " 11. cap validate\n"
+               " 12. cap verify\n"
+               " 13. cap publish\n"
+               "\n"
+               "============================================================\n"
+               "AUSFUEHRLICHE BEFEHLSBESCHREIBUNG\n"
+               "============================================================\n"
+               "\n"
+               "PROJEKTVERWALTUNG\n"
+               "\n"
+               "  cap init [Ordner]                         Kurzform: cap -i\n"
+               "      Initialisiert ein Projekt und erzeugt Projektordner sowie\n"
+               "      die lokale Konfigurationsdatei.\n"
+               "\n"
+               "  cap create <Typ> [Titel] [-p <Parent>]    Kurzform: cap -c\n"
+               "      Erstellt eine YAML-Anforderung in reqs/. Ohne Titel folgt\n"
+               "      eine interaktive Abfrage. -p verlinkt direkt einen Parent.\n"
+               "      Beispiel: cap -c srs \"Sensor auslesen\" -p SYS-001\n"
+               "\n"
+               "TRACEABILITY\n"
+               "\n"
+               "  cap link <Child> <Parent>                 Kurzform: cap -l\n"
+               "      Verknuepft zwei Items und signiert beide YAML-Dateien.\n"
+               "      Beispiel: cap -l SRS-001 SYS-001\n"
+               "\n"
+               "  cap unlink <Child> <Parent>               Kurzform: cap -u\n"
+               "      Entfernt einen Link und signiert beide YAML-Dateien.\n"
+               "\n"
+               "  cap tree                                  Kurzform: cap -t\n"
+               "      Zeigt den Anforderungsbaum in der Konsole.\n"
+               "\n"
+               "STATUS UND AUSWERTUNG\n"
+               "\n"
+               "  cap status                                Kurzform: cap -st\n"
+               "      Zeigt Status, Implementierung und Testabdeckung.\n"
+               "\n"
+               "  cap scan                                  Kurzform: cap -s\n"
+               "      Sucht @cap-start/@cap-end in C/C++-Dateien und schreibt\n"
+               "      Datei, Zeilen und Git-Hash in die zugehoerigen YAMLs.\n"
+               "\n"
+               "  cap validate\n"
+               "      Prueft Pflichtfelder, Links, Symmetrie und Klassifizierung.\n"
+               "\n"
+               "MANUELLE YAML-BEARBEITUNG\n"
+               "\n"
+               "  cap diff <UID>\n"
+               "      Zeigt unsignierte YAML-Aenderungen und, falls vorhanden,\n"
+               "      den Git-Diff. Beispiel: cap diff SRS-001\n"
+               "\n"
+               "  cap sign <UID> -m <Begruendung>\n"
+               "      Signiert eine bewusst vorgenommene manuelle YAML-Aenderung.\n"
+               "      Beispiel: cap sign SRS-001 -m \"Rationale ergaenzt\"\n"
+               "\n"
+               "TESTINTEGRATION\n"
+               "\n"
+               "  cap test import <Datei>\n"
+               "      Importiert JUnit-XML oder Captain's-Log-JSON.\n"
+               "      Beispiel: cap test import reports/test_results.xml\n"
+               "\n"
+               "SICHERHEIT UND AUDIT\n"
+               "\n"
+               "  cap verify\n"
+               "      Prueft RSA-PSS-Signaturen, Audit-Kette und Content-Hashes.\n"
+               "      Normale Editor-Aenderungen werden anschliessend mit cap sign\n"
+               "      autorisiert. Eine beschaedigte History erzeugt SECURITY ALERT.\n"
+               "\n"
+               "  cap publish\n"
+               "      Prüft zuerst alle Audit-Signaturen und erzeugt danach\n"
+               "      eine interaktive report.html im Projektordner.\n"
+               "      Der Report enthält Requirements Tree, Details, Code,\n"
+               "      Testergebnisse und verifizierte Audit-Historien.\n"
+               "\n"
+               "ALLGEMEIN\n"
+               "\n"
+               "  cap help                                  Kurzformen: -h, --help\n"
+               "  cap version                               Kurzformen: -v, --version\n"
+               "\n"
+               "UNTERSTUETZTE ITEM-TYPEN\n"
+               "  USR, SYS, SRS, SEC, ARCH, LLD, RISK, TEST, UT, IT, ST, AT,\n"
+               "  BUG, CR und SOUP\n"
+               "\n"
+               "WICHTIG\n"
+               "  YAML-Dateien in reqs/ sind die alleinige Source of Truth.\n"
+               "  Fachliche Inhalte duerfen direkt editiert werden. Danach cap sign.\n"
+               "  History, Public Keys und Signaturen nie manuell bearbeiten.\n";
+    }
+
+} // namespace capcom::cli
+
+
+===== FILE: .\cli\src\commands\create_command.cpp =====
+
+#include "capcom/commands/create_command.hpp"
+#include "capcom/audit/history_service.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/config/app_config.hpp"
+#include "capcom/requirements/requirement_store.hpp"
+
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
+
+namespace capcom::commands
+{
+    namespace
+    {
+
+        std::string yaml_quote(const std::string &value)
+        {
+            std::string result{"\""};
+            for (const char character : value)
+            {
+                if (character == '\\' || character == '"')
+                    result.push_back('\\');
+                if (character == '\n')
+                    result += "\\n";
+                else if (character != '\r')
+                    result.push_back(character);
+            }
+            result.push_back('"');
+            return result;
+        }
+
+        bool valid_type(const std::string &type)
+        {
+            return type.size() >= 2 && type.size() <= 16 &&
+                   std::all_of(type.begin(), type.end(), [](const unsigned char character)
+                               { return std::isalnum(character) != 0 || character == '_'; });
+        }
+
+    } // namespace
+
+    int CreateCommand::execute(
+        const std::filesystem::path &project,
+        std::string type,
+        const std::string &title,
+        const std::optional<std::string> &parent_uid) const
+    {
+
+        const auto config = capcom::config::ConfigLoader{}.load(project);
+        (void)config;
+
+        std::transform(type.begin(), type.end(), type.begin(), [](const unsigned char character)
+                       { return static_cast<char>(std::toupper(character)); });
+
+        if (!valid_type(type))
+        {
+            throw std::runtime_error("Type must contain 2-16 letters, digits or underscores.");
+        }
+        if (title.empty() || title.size() > 300)
+        {
+            throw std::runtime_error("Title must contain 1-300 characters.");
+        }
+
+        const auto requirements_directory = project / "reqs";
+        std::filesystem::create_directories(requirements_directory);
+
+        const std::regex file_pattern{"^" + type + R"(-(\d+)\.yaml$)"};
+        int highest_number = 0;
+
+        for (const auto &entry : std::filesystem::directory_iterator(requirements_directory))
+        {
+            if (!entry.is_regular_file())
+                continue;
+
+            std::smatch match;
+            const auto filename = entry.path().filename().string();
+            if (std::regex_match(filename, match, file_pattern))
+            {
+                highest_number = std::max(highest_number, std::stoi(match[1].str()));
+            }
+        }
+
+        std::ostringstream uid_builder;
+        uid_builder << type << '-' << std::setw(3) << std::setfill('0') << highest_number + 1;
+        const auto uid = uid_builder.str();
+        const auto file = requirements_directory / (uid + ".yaml");
+
+        {
+            std::ofstream output(file, std::ios::binary);
+            if (!output)
+                throw std::runtime_error("Cannot create " + file.string());
+
+            output << "uid: " << uid << "\n"
+                   << "type: " << type << "\n"
+                   << "status: Draft\n"
+                   << "title: " << yaml_quote(title) << "\n"
+                   << "text: \"\"\n"
+                   << "rationale: \"\"\n"
+                   << "version: \"0.1.0\"\n"
+                   << "git_hash: null\n"
+                   << "attributes: {}\n"
+                   << "parents: []\n"
+                   << "children: []\n"
+                   << "integration_template: |\n"
+                   << "  /* @cap-start: " << uid << "\n"
+                   << "   * @cap-desc: " << title << "\n"
+                   << "   */\n"
+                   << "  /* @cap-end: " << uid << " */\n";
+
+            if (!output)
+                throw std::runtime_error("Failed while writing " + file.string());
+        }
+
+        try
+        {
+            if (parent_uid.has_value())
+            {
+                capcom::requirements::RequirementStore{project}.add_link(uid, *parent_uid);
+            }
+        }
+        catch (...)
+        {
+            // Do not leave a half-created, unlinked item when the combined command fails.
+            std::error_code ignored;
+            std::filesystem::remove(file, ignored);
+            throw;
+        }
+        const auto identity =
+            capcom::identity::IdentityManager{}.load_or_create();
+
+        capcom::audit::HistoryService history{identity};
+
+        history.append(
+            file,
+            uid,
+            "ITEM_CREATED");
+
+        std::cout << "Created " << uid << ": " << file.string() << '\n';
+        if (parent_uid.has_value())
+        {
+            std::cout << "Linked " << *parent_uid << " -> " << uid << '\n';
+        }
+        return 0;
+    }
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\src\commands\init_command.cpp =====
+
+#include "capcom/commands/init_command.hpp"
+#include "capcom/config/app_config.hpp"
+#include <array>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+namespace capcom::commands {
+int InitCommand::execute(const std::filesystem::path& target) const {
+    std::filesystem::create_directories(target);
+    const std::array dirs{"reqs", "src", "include", "tests", "reports", "hardware"};
+    for (const auto* dir : dirs) std::filesystem::create_directories(target / dir);
+    capcom::config::ConfigLoader{}.write_default(target);
+    const auto gitignore = target / ".gitignore";
+    if (!std::filesystem::exists(gitignore)) {
+        std::ofstream out(gitignore, std::ios::binary);
+        if (!out) throw std::runtime_error("Cannot create " + gitignore.string());
+        out << "backend/db/traceability.db-wal\nbackend/db/traceability.db-shm\nreports/\n";
+    }
+    std::cout << "Initialized CapCom project: " << std::filesystem::absolute(target).string() << '\n';
+    return 0;
+}
+}
+
+
+===== FILE: .\cli\src\commands\link_command.cpp =====
+
+#include "capcom/commands/link_command.hpp"
+#include "capcom/audit/history_service.hpp"
+#include "capcom/config/app_config.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/requirements/requirement_store.hpp"
+#include "capcom/yaml/yaml_store.hpp"
+#include <iostream>
+#include <stdexcept>
+namespace capcom::commands {
+int LinkCommand::execute(const std::filesystem::path& project,
+                         const std::string& child_raw,
+                         const std::string& parent_raw,
+                         const bool remove) const {
+    const auto config = capcom::config::ConfigLoader{}.load(project);
+    (void)config;
+    const auto child_uid = capcom::yaml::normalize_uid(child_raw);
+    const auto parent_uid = capcom::yaml::normalize_uid(parent_raw);
+    const auto before = capcom::yaml::YamlStore{project}.load_all();
+    const auto child_before = before.find(child_uid);
+    const auto parent_before = before.find(parent_uid);
+    if (child_before == before.end()) throw std::runtime_error("Child not found: " + child_uid);
+    if (parent_before == before.end()) throw std::runtime_error("Parent not found: " + parent_uid);
+
+    capcom::requirements::RequirementStore store{project};
+    if (remove) store.remove_link(child_uid, parent_uid);
+    else store.add_link(child_uid, parent_uid);
+
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService history{identity};
+    const auto action = remove ? "LINK_REMOVED" : "LINK_CREATED";
+    const auto reason = parent_uid + (remove ? " unlinked from " : " linked to ") + child_uid;
+    history.append(child_before->second.file, child_uid, action, reason);
+    history.append(parent_before->second.file, parent_uid, action, reason);
+    history.verify_file(child_before->second.file, child_uid);
+    history.verify_file(parent_before->second.file, parent_uid);
+
+    std::cout << (remove ? "Removed link: " : "Created link: ")
+              << parent_uid << " -> " << child_uid << '\n';
+    return 0;
+}
+}
+
+
+===== FILE: .\cli\src\commands\manual_commands.cpp =====
+
+#include "capcom/commands/manual_commands.hpp"
+#include "capcom/audit/history_service.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/yaml/yaml_store.hpp"
+#include <cstdlib>
+#include <iostream>
+#include <stdexcept>
+namespace capcom::commands {
+namespace {
+capcom::yaml::Item find_item(const std::filesystem::path& project,
+                             const std::string& raw_uid) {
+    const auto uid = capcom::yaml::normalize_uid(raw_uid);
+    const auto items = capcom::yaml::YamlStore{project}.load_all();
+    const auto iterator = items.find(uid);
+    if (iterator == items.end()) throw std::runtime_error("Item not found: " + uid);
+    return iterator->second;
+}
+}
+int SignCommand::execute(const std::filesystem::path& project,
+                         const std::string& raw_uid,
+                         const std::string& reason) const {
+    if (reason.empty()) throw std::runtime_error("A change reason is required.");
+    const auto item = find_item(project, raw_uid);
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService history{identity};
+    history.verify_history_chain(item.file, item.uid);
+    if (!history.has_unsigned_content_changes(item.file, item.uid)) {
+        std::cout << item.uid << " has no unsigned content changes.\n";
+        return 0;
+    }
+    history.append(item.file, item.uid, "CONTENT_UPDATED", reason);
+    history.verify_file(item.file, item.uid);
+    std::cout << "Signed manual YAML changes for " << item.uid << ".\n";
+    return 0;
+}
+int DiffCommand::execute(const std::filesystem::path& project,
+                         const std::string& raw_uid) const {
+    const auto item = find_item(project, raw_uid);
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService history{identity};
+    history.verify_history_chain(item.file, item.uid);
+    const auto current = history.current_content_hash(item.file);
+    const auto signed_hash = history.latest_signed_content_hash(item.file);
+    if (current == signed_hash) {
+        std::cout << item.uid << " has no unsigned content changes.\n";
+        return 0;
+    }
+    std::cout << "Unsigned changes detected in " << item.uid << "\n"
+              << "Last signed hash: " << signed_hash << "\n"
+              << "Current hash:     " << current << "\n\n";
+    const auto command = "git --no-pager diff -- \"" + item.file.string() + "\"";
+    const int result = std::system(command.c_str());
+    if (result != 0) {
+        std::cout << "Git diff is unavailable. Review the YAML manually before signing.\n";
+    }
+    std::cout << "To authorize the reviewed edit:\n"
+              << "  cap sign " << item.uid << " -m \"Change reason\"\n";
+    return 1;
+}
+}
+
+
+===== FILE: .\cli\src\commands\publish_command.cpp =====
+
+#include "capcom/commands/publish_command.hpp"
+
+#include "capcom/audit/history_service.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/yaml/yaml_store.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace capcom::commands {
+namespace {
+
+struct AuditEntry {
+    std::string timestamp;
+    std::string action;
+    std::string actor;
+    std::string reason;
+    std::string key_id;
+};
+
+std::string trim(std::string value) {
+    const auto first = value.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return {};
+    const auto last = value.find_last_not_of(" \t\r\n");
+    return value.substr(first, last - first + 1);
+}
+
+std::string unquote(std::string value) {
+    value = trim(std::move(value));
+    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.size() - 2);
+    }
+    return value;
+}
+
+std::string html_escape(const std::string& value) {
+    std::string output;
+    output.reserve(value.size());
+    for (const char character : value) {
+        switch (character) {
+        case '&': output += "&amp;"; break;
+        case '<': output += "&lt;"; break;
+        case '>': output += "&gt;"; break;
+        case '"': output += "&quot;"; break;
+        case '\'': output += "&#39;"; break;
+        default: output.push_back(character); break;
+        }
+    }
+    return output;
+}
+
+std::vector<std::string> read_lines(const std::filesystem::path& file) {
+    std::ifstream input(file, std::ios::binary);
+    if (!input) throw std::runtime_error("Cannot read " + file.string());
+    std::vector<std::string> result;
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        result.push_back(line);
+    }
+    return result;
+}
+
+std::vector<AuditEntry> read_history(const std::filesystem::path& file) {
+    const auto lines = read_lines(file);
+    std::vector<AuditEntry> entries;
+    AuditEntry current{};
+    bool in_history = false;
+
+    auto finish = [&]() {
+        if (!current.timestamp.empty()) entries.push_back(current);
+        current = {};
+    };
+
+    for (const auto& line : lines) {
+        if (line.rfind("history:", 0) == 0) {
+            in_history = true;
+            continue;
+        }
+        if (!in_history) continue;
+        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
+
+        auto normalized = trim(line);
+        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
+        const auto colon = normalized.find(':');
+        if (colon == std::string::npos) continue;
+        const auto key = trim(normalized.substr(0, colon));
+        const auto value = unquote(normalized.substr(colon + 1));
+
+        if (key == "timestamp") {
+            finish();
+            current.timestamp = value;
+        } else if (key == "action") current.action = value;
+        else if (key == "actor") current.actor = value;
+        else if (key == "reason") current.reason = value;
+        else if (key == "key_id") current.key_id = value;
+    }
+    finish();
+    return entries;
+}
+
+std::string generated_at_utc() {
+    const auto time = std::chrono::system_clock::to_time_t(
+        std::chrono::system_clock::now());
+    std::tm utc{};
+#ifdef _WIN32
+    gmtime_s(&utc, &time);
+#else
+    gmtime_r(&time, &utc);
+#endif
+    std::ostringstream output;
+    output << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
+    return output.str();
+}
+
+std::string badge_class(const std::string& status) {
+    if (status == "Approved" || status == "Tested" || status == "Passed") {
+        return "badge badge-green";
+    }
+    if (status == "Rejected" || status == "Failed") {
+        return "badge badge-red";
+    }
+    return "badge badge-yellow";
+}
+
+std::string tree_node(
+    const std::string& uid,
+    const std::map<std::string, capcom::yaml::Item>& items,
+    std::set<std::string> path) {
+    const auto iterator = items.find(uid);
+    if (iterator == items.end()) {
+        return "<li class=\"missing\">" + html_escape(uid) + " [missing]</li>";
+    }
+    if (!path.insert(uid).second) {
+        return "<li><a href=\"#" + html_escape(uid) + "\">" +
+            html_escape(uid) + " [reference]</a></li>";
+    }
+
+    const auto& item = iterator->second;
+    std::ostringstream output;
+    output << "<li><details open><summary><a href=\"#" << html_escape(uid)
+           << "\"><span class=\"uid\">" << html_escape(uid)
+           << "</span> " << html_escape(item.title) << "</a></summary>";
+
+    auto children = item.children;
+    std::sort(children.begin(), children.end());
+    if (!children.empty()) {
+        output << "<ul>";
+        for (const auto& child : children) output << tree_node(child, items, path);
+        output << "</ul>";
+    }
+    output << "</details></li>";
+    return output.str();
+}
+
+std::string render_tree(const std::map<std::string, capcom::yaml::Item>& items) {
+    std::vector<std::string> roots;
+    for (const auto& [uid, item] : items) {
+        if (item.parents.empty()) roots.push_back(uid);
+    }
+    std::ostringstream output;
+    output << "<ul class=\"tree\">";
+    for (const auto& root : roots) output << tree_node(root, items, {});
+    output << "</ul>";
+    return output.str();
+}
+
+std::string render_card(const capcom::yaml::Item& item) {
+    const auto history = read_history(item.file);
+    std::ostringstream output;
+    output << "<article id=\"" << html_escape(item.uid)
+           << "\" class=\"card requirement\" data-search=\""
+           << html_escape(item.uid + " " + item.title + " " + item.status)
+           << "\">";
+    output << "<div class=\"card-head\"><div><div class=\"uid\">"
+           << html_escape(item.uid) << "</div><h2>" << html_escape(item.title)
+           << "</h2></div><span class=\"" << badge_class(item.status) << "\">"
+           << html_escape(item.status) << "</span></div>";
+
+    output << "<section><h3>Beschreibung</h3><p>"
+           << (item.text.empty() ? "<em>Nicht ausgefüllt</em>" : html_escape(item.text))
+           << "</p></section>";
+
+    output << "<section><h3>Traceability</h3><p><strong>Parents:</strong> ";
+    if (item.parents.empty()) output << "–";
+    for (std::size_t index = 0; index < item.parents.size(); ++index) {
+        if (index != 0) output << ", ";
+        output << "<a href=\"#" << html_escape(item.parents[index]) << "\">"
+               << html_escape(item.parents[index]) << "</a>";
+    }
+    output << "</p><p><strong>Children:</strong> ";
+    if (item.children.empty()) output << "–";
+    for (std::size_t index = 0; index < item.children.size(); ++index) {
+        if (index != 0) output << ", ";
+        output << "<a href=\"#" << html_escape(item.children[index]) << "\">"
+               << html_escape(item.children[index]) << "</a>";
+    }
+    output << "</p></section>";
+
+    output << "<section><h3>Code-Verknüpfungen</h3>";
+    if (item.implementations.empty()) {
+        output << "<p><em>Keine Implementierung gefunden</em></p>";
+    } else {
+        output << "<div class=\"table-wrap\"><table><thead><tr><th>Datei</th>"
+                  "<th>Zeilen</th><th>Git</th></tr></thead><tbody>";
+        for (const auto& implementation : item.implementations) {
+            output << "<tr><td><code>" << html_escape(implementation.file)
+                   << "</code></td><td>" << implementation.start_line << "–"
+                   << implementation.end_line << "</td><td><code>"
+                   << html_escape(implementation.git_hash) << "</code></td></tr>";
+        }
+        output << "</tbody></table></div>";
+    }
+    output << "</section>";
+
+    output << "<section><h3>Testergebnis</h3>";
+    if (item.test.status.empty()) {
+        output << "<p><em>Kein Testergebnis importiert</em></p>";
+    } else {
+        output << "<p><span class=\"" << badge_class(item.test.status) << "\">"
+               << html_escape(item.test.status) << "</span></p>"
+               << "<p><strong>Quelle:</strong> " << html_escape(item.test.source)
+               << "</p><p><strong>Zeit:</strong> " << html_escape(item.test.timestamp)
+               << "</p><p>" << html_escape(item.test.message) << "</p>";
+    }
+    output << "</section>";
+
+    output << "<section><h3>Audit-Historie</h3>"
+              "<div class=\"table-wrap\"><table><thead><tr><th>Zeitpunkt</th>"
+              "<th>Aktion</th><th>Benutzer</th><th>Grund</th><th>Integrität</th>"
+              "</tr></thead><tbody>";
+    for (const auto& entry : history) {
+        output << "<tr><td>" << html_escape(entry.timestamp) << "</td><td>"
+               << html_escape(entry.action) << "</td><td>"
+               << html_escape(entry.actor) << "</td><td>"
+               << html_escape(entry.reason) << "</td>"
+               << "<td><span class=\"verified\">&#128274; Verifiziert</span></td></tr>";
+    }
+    output << "</tbody></table></div></section></article>";
+    return output.str();
+}
+
+std::string render_html(const std::map<std::string, capcom::yaml::Item>& items) {
+    std::ostringstream cards;
+    for (const auto& [uid, item] : items) {
+        (void)uid;
+        cards << render_card(item);
+    }
+
+    std::ostringstream html;
+    html << R"HTML(<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Captain's Log Traceability Report</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{color-scheme:dark;--bg:#020617;--panel:#0f172a;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--cyan:#67e8f9}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,Segoe UI,sans-serif}
+a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}.header{position:sticky;top:0;z-index:20;padding:18px 24px;background:#0f172af2;border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+.header h1{margin:0;font-size:24px}.header p{margin:4px 0 0;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:20px;padding:20px}.sidebar{position:sticky;top:100px;align-self:start;max-height:calc(100vh - 120px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.sidebar input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#020617;color:var(--text);margin-bottom:14px}.tree,.tree ul{list-style:none;padding-left:16px}.tree>li{padding-left:0}.tree li{margin:6px 0}.tree summary{cursor:pointer}.uid{font-family:Consolas,monospace;color:var(--cyan);font-weight:700}.content{min-width:0}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px;scroll-margin-top:100px}.card-head{display:flex;justify-content:space-between;gap:16px}.card h2{margin:4px 0 0;font-size:21px}.card h3{font-size:15px;margin:22px 0 8px;color:#cbd5e1}.card p{line-height:1.55;margin:6px 0}.badge{display:inline-block;height:max-content;padding:4px 10px;border-radius:999px;font-weight:700}.badge-green,.verified{color:#86efac}.badge-green{background:#14532d}.badge-yellow{background:#713f12;color:#fde68a}.badge-red{background:#7f1d1d;color:#fecaca}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid #1e293b;vertical-align:top}th{color:#cbd5e1}code{font-family:Consolas,monospace;color:#bae6fd}.hidden{display:none!important}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{position:static;max-height:none}}
+@media print{.header,.sidebar{position:static}.layout{display:block}.sidebar input{display:none}.card{break-inside:avoid;background:white;color:black}.header,body{background:white;color:black}}
+</style></head><body>
+<header class="header"><h1>Captain's Log Traceability Report</h1><p>Erzeugt: )HTML"
+         << html_escape(generated_at_utc()) << " · Anforderungen: " << items.size()
+         << R"HTML( · Audit-Signaturen: verifiziert</p></header>
+<div class="layout"><aside class="sidebar"><input id="search" type="search" placeholder="UID, Titel oder Status suchen..."><h2>Anforderungsbaum</h2>)HTML"
+         << render_tree(items)
+         << R"HTML(</aside><main class="content">)HTML"
+         << cards.str()
+         << R"HTML(</main></div>
+<script>
+const input=document.getElementById('search');
+input.addEventListener('input',()=>{const q=input.value.toLocaleLowerCase('de');document.querySelectorAll('.requirement').forEach(card=>{card.classList.toggle('hidden',!card.dataset.search.toLocaleLowerCase('de').includes(q));});});
+</script></body></html>)HTML";
+    return html.str();
+}
+
+void write_atomic(const std::filesystem::path& file, const std::string& content) {
+    auto temporary = file;
+    temporary += ".tmp";
+    {
+        std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
+        if (!output) throw std::runtime_error("Cannot write " + temporary.string());
+        output.write(content.data(), static_cast<std::streamsize>(content.size()));
+        if (!output) throw std::runtime_error("Failed writing " + temporary.string());
+    }
+    std::error_code error;
+    std::filesystem::remove(file, error);
+    error.clear();
+    std::filesystem::rename(temporary, file, error);
+    if (error) throw std::runtime_error("Cannot create report: " + error.message());
+}
+
+} // namespace
+
+int PublishCommand::execute(const std::filesystem::path& project) const {
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService{identity}.verify_project(project);
+
+    const auto items = capcom::yaml::YamlStore{project}.load_all();
+    if (items.empty()) throw std::runtime_error("No YAML requirements found in reqs/.");
+
+    const auto report = project / "report.html";
+    write_atomic(report, render_html(items));
+    std::cout << "Published verified report: " << report.string() << '\n';
+    return 0;
+}
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\src\commands\review_command.cpp =====
+
+#include "capcom/commands/review_command.hpp"
+
+#include "capcom/audit/history_service.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/yaml/yaml_store.hpp"
+
+#include <algorithm>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace capcom::commands {
+namespace {
+
+std::string trim(std::string value) {
+    const auto first = value.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return {};
+    const auto last = value.find_last_not_of(" \t\r\n");
+    return value.substr(first, last - first + 1);
+}
+
+std::string unquote(std::string value) {
+    value = trim(std::move(value));
+    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
+        value = value.substr(1, value.size() - 2);
+    }
+    return value;
+}
+
+std::vector<std::string> read_lines(const std::filesystem::path& file) {
+    std::ifstream input(file, std::ios::binary);
+    if (!input) throw std::runtime_error("Cannot read " + file.string());
+    std::vector<std::string> lines;
+    std::string line;
+    while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        lines.push_back(line);
+    }
+    return lines;
+}
+
+void save_atomic(
+    const std::filesystem::path& file,
+    const std::vector<std::string>& lines) {
+    auto temporary = file;
+    temporary += ".review.tmp";
+    {
+        std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
+        if (!output) throw std::runtime_error("Cannot write " + temporary.string());
+        for (const auto& line : lines) output << line << '\n';
+        if (!output) throw std::runtime_error("Failed writing " + temporary.string());
+    }
+    std::error_code error;
+    std::filesystem::remove(file, error);
+    error.clear();
+    std::filesystem::rename(temporary, file, error);
+    if (error) throw std::runtime_error("Cannot update review status: " + error.message());
+}
+
+void replace_status(
+    const std::filesystem::path& file,
+    const std::string& status) {
+    auto lines = read_lines(file);
+    const auto iterator = std::find_if(lines.begin(), lines.end(), [](const auto& line) {
+        return line.rfind("status:", 0) == 0;
+    });
+    if (iterator == lines.end()) throw std::runtime_error("Missing status field in " + file.string());
+    *iterator = "status: " + status;
+    save_atomic(file, lines);
+}
+
+std::string first_author_key(const std::filesystem::path& file) {
+    const auto lines = read_lines(file);
+    bool history = false;
+    std::string current_action;
+    for (const auto& line : lines) {
+        if (line.rfind("history:", 0) == 0) {
+            history = true;
+            continue;
+        }
+        if (!history) continue;
+        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
+
+        auto normalized = trim(line);
+        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
+        const auto colon = normalized.find(':');
+        if (colon == std::string::npos) continue;
+        const auto key = trim(normalized.substr(0, colon));
+        const auto value = unquote(normalized.substr(colon + 1));
+        if (key == "action") current_action = value;
+        if (key == "key_id" && current_action == "ITEM_CREATED") return value;
+    }
+    throw std::runtime_error("Cannot determine author key from ITEM_CREATED history.");
+}
+
+std::string latest_submitter_key(const std::filesystem::path& file) {
+    const auto lines = read_lines(file);
+    bool history = false;
+    std::string action;
+    std::string latest;
+    for (const auto& line : lines) {
+        if (line.rfind("history:", 0) == 0) {
+            history = true;
+            continue;
+        }
+        if (!history) continue;
+        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
+
+        auto normalized = trim(line);
+        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
+        const auto colon = normalized.find(':');
+        if (colon == std::string::npos) continue;
+        const auto key = trim(normalized.substr(0, colon));
+        const auto value = unquote(normalized.substr(colon + 1));
+        if (key == "timestamp") action.clear();
+        else if (key == "action") action = value;
+        else if (key == "key_id" && action == "SUBMITTED_FOR_REVIEW") latest = value;
+    }
+    if (latest.empty()) throw std::runtime_error("No SUBMITTED_FOR_REVIEW history entry found.");
+    return latest;
+}
+
+bool technical_type(const std::string& type) {
+    return type == "SRS" || type == "SEC" || type == "ARCH" ||
+           type == "LLD" || type == "UT" || type == "IT" ||
+           type == "ST" || type == "AT" || type == "TEST";
+}
+
+bool test_type(const std::string& type) {
+    return type == "UT" || type == "IT" || type == "ST" ||
+           type == "AT" || type == "TEST";
+}
+
+bool repository_clean(const std::filesystem::path& project) {
+#ifdef _WIN32
+    const auto temporary = project / ".captainslog_git_status.tmp";
+    const auto command = "git -C \"" + project.string() +
+        "\" status --porcelain > \"" + temporary.string() + "\" 2>nul";
+#else
+    const auto temporary = project / ".captainslog_git_status.tmp";
+    const auto command = "git -C \"" + project.string() +
+        "\" status --porcelain > \"" + temporary.string() + "\" 2>/dev/null";
+#endif
+    const int result = std::system(command.c_str());
+    std::ifstream input(temporary);
+    const std::string content{std::istreambuf_iterator<char>{input}, {}};
+    std::error_code ignored;
+    std::filesystem::remove(temporary, ignored);
+    return result == 0 && trim(content).empty();
+}
+
+capcom::yaml::Item find_item(
+    const std::filesystem::path& project,
+    const std::string& raw_uid,
+    std::map<std::string, capcom::yaml::Item>& items) {
+    const auto uid = capcom::yaml::normalize_uid(raw_uid);
+    items = capcom::yaml::YamlStore{project}.load_all();
+    const auto iterator = items.find(uid);
+    if (iterator == items.end()) throw std::runtime_error("Item not found: " + uid);
+    return iterator->second;
+}
+
+std::vector<std::string> readiness_errors(
+    const capcom::yaml::Item& item,
+    const std::map<std::string, capcom::yaml::Item>& items) {
+    capcom::yaml::YamlStore unused{item.file.parent_path().parent_path()};
+    (void)unused;
+    std::vector<std::string> errors;
+    if (item.title.empty()) errors.push_back("title is empty");
+    if (item.text.empty()) errors.push_back("text is empty");
+    if (item.rationale.empty()) errors.push_back("rationale is empty");
+    if (technical_type(item.type) && !test_type(item.type) && item.implementations.empty()) {
+        errors.push_back("implementation evidence is missing; run cap scan");
+    }
+    if (test_type(item.type) &&
+        item.test.status != "Passed" && item.test.status != "Tested") {
+        errors.push_back("test result is not Passed");
+    }
+    for (const auto& parent : item.parents) {
+        if (!items.contains(parent)) errors.push_back("missing parent " + parent);
+    }
+    for (const auto& child : item.children) {
+        if (!items.contains(child)) errors.push_back("missing child " + child);
+    }
+    return errors;
+}
+
+void print_check(
+    const capcom::yaml::Item& item,
+    const std::map<std::string, capcom::yaml::Item>& items,
+    const capcom::identity::Identity& identity,
+    const bool clean) {
+    const auto errors = readiness_errors(item, items);
+    std::cout << "Review check for " << item.uid << "\n\n"
+              << (item.status == "In Review" ? "[OK] " : "[--] ")
+              << "Status: " << item.status << '\n'
+              << (errors.empty() ? "[OK] " : "[FAIL] ")
+              << "Requirement completeness\n"
+              << (clean ? "[OK] " : "[WARN] ")
+              << "Git working tree " << (clean ? "clean" : "contains changes") << '\n';
+    for (const auto& error : errors) std::cout << "       - " << error << '\n';
+    std::cout << "[INFO] Current reviewer key: " << identity.key_id << "\n\n"
+              << "Manual review required:\n"
+              << "  [ ] Requirement is clear, unambiguous and testable\n"
+              << "  [ ] Traceability links are complete and correct\n"
+              << "  [ ] Implementation satisfies the requirement\n"
+              << "  [ ] Error and boundary cases are covered\n"
+              << "  [ ] Test procedure and result are suitable\n";
+}
+
+} // namespace
+
+int ReviewCommand::execute(
+    const std::filesystem::path& project,
+    const std::string& raw_uid,
+    const ReviewAction action,
+    const std::string& reason) const {
+    std::map<std::string, capcom::yaml::Item> items;
+    const auto item = find_item(project, raw_uid, items);
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService history{identity};
+
+    history.verify_project(project);
+    const auto validation_errors = capcom::yaml::YamlStore{project}.validate(items);
+    const auto readiness = readiness_errors(item, items);
+
+    if (action == ReviewAction::check) {
+        print_check(item, items, identity, repository_clean(project));
+        return readiness.empty() && validation_errors.empty() ? 0 : 2;
+    }
+
+    if (reason.empty()) throw std::runtime_error("A review reason is required with -m.");
+
+    if (action == ReviewAction::submit) {
+        if (item.status == "Approved") {
+            throw std::runtime_error("Approved items must be changed before a new review.");
+        }
+        if (!validation_errors.empty()) {
+            throw std::runtime_error("Project validation failed. Run 'cap validate'.");
+        }
+        if (!readiness.empty()) {
+            throw std::runtime_error("Item is not review-ready. Run 'cap review-check " + item.uid + "'.");
+        }
+        replace_status(item.file, "In Review");
+        history.append(item.file, item.uid, "SUBMITTED_FOR_REVIEW", reason);
+        history.verify_file(item.file, item.uid);
+        std::cout << item.uid << " submitted for review.\n";
+        return 0;
+    }
+
+    if (item.status != "In Review") {
+        throw std::runtime_error("Item must be In Review before approve or reject.");
+    }
+
+    const auto author_key = first_author_key(item.file);
+    const auto submitter_key = latest_submitter_key(item.file);
+    if (identity.key_id == author_key || identity.key_id == submitter_key) {
+        throw std::runtime_error(
+            "FOUR-EYES VIOLATION: Author/submitter cannot approve or reject " + item.uid + ".");
+    }
+
+    if (action == ReviewAction::approve) {
+        if (!repository_clean(project)) {
+            throw std::runtime_error("Git working tree is not clean. Commit the reviewed state first.");
+        }
+        if (!validation_errors.empty() || !readiness.empty()) {
+            throw std::runtime_error("Item is not approvable. Run 'cap review-check " + item.uid + "'.");
+        }
+        replace_status(item.file, "Approved");
+        history.append(item.file, item.uid, "APPROVED", reason);
+        history.verify_file(item.file, item.uid);
+        std::cout << item.uid << " approved by " << identity.full_name << ".\n";
+        return 0;
+    }
+
+    replace_status(item.file, "Rejected");
+    history.append(item.file, item.uid, "REJECTED", reason);
+    history.verify_file(item.file, item.uid);
+    std::cout << item.uid << " rejected by " << identity.full_name << ".\n";
+    return 0;
+}
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\src\commands\security_commands.cpp =====
+
+#include "capcom/commands/security_commands.hpp"
+#include "capcom/audit/history_service.hpp"
+#include "capcom/identity/identity_manager.hpp"
+#include <iostream>
+namespace capcom::commands {
+int VerifyCommand::execute(const std::filesystem::path& project) const {
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    capcom::audit::HistoryService{identity}.verify_project(project);
+    std::cout << "All Captain's Log audit signatures are valid.\n";
+    return 0;
+}
+}
+
+
+===== FILE: .\cli\src\commands\tree_command.cpp =====
+
+#include "capcom/commands/tree_command.hpp"
+#include "capcom/config/app_config.hpp"
+#include "capcom/requirements/requirement_store.hpp"
+#include <algorithm>
+#include <iostream>
+#include <set>
+namespace capcom::commands
+{
+    namespace
+    {
+        using Items = std::map<std::string, capcom::requirements::Requirement>;
+        void node(const std::string &id, const std::string &pre, bool last, const Items &m, std::set<std::string> path)
+        {
+            auto it = m.find(id);
+            std::cout << pre << (last ? "`-- " : "|-- ") << id;
+            if (it == m.end())
+            {
+                std::cout << " [missing]\n";
+                return;
+            }
+            std::cout << "  " << it->second.title << "  [" << it->second.status << "]\n";
+            if (!path.insert(id).second)
+                return;
+            auto ch = it->second.children;
+            std::sort(ch.begin(), ch.end());
+            for (size_t i = 0; i < ch.size(); ++i)
+                node(ch[i], pre + (last ? "    " : "|   "), i + 1 == ch.size(), m, path);
+        }
+    }
+    int TreeCommand::execute(const std::filesystem::path &p) const
+    {
+        const auto cfg = capcom::config::ConfigLoader{}.load(p);
+        (void)cfg;
+        auto m = capcom::requirements::RequirementStore{p}.load_all();
+        if (m.empty())
+        {
+            std::cout << "No requirements found.\n";
+            return 0;
+        }
+        std::vector<std::string> roots;
+        for (auto &[id, r] : m)
+            if (r.parents.empty())
+                roots.push_back(id);
+        std::cout << "Captain's Log requirements tree\n";
+        for (size_t i = 0; i < roots.size(); ++i)
+            node(roots[i], "", i + 1 == roots.size(), m, {});
+        return 0;
+    }
+}
+
+
+===== FILE: .\cli\src\commands\yaml_commands.cpp =====
+
+#include "capcom/commands/yaml_commands.hpp"
+#include "capcom/yaml/yaml_store.hpp"
+
+#include <chrono>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+namespace capcom::commands {
+namespace {
+
+bool is_source_file(const std::filesystem::path& path) {
+    const auto extension = path.extension().string();
+    return extension == ".c" || extension == ".cpp" || extension == ".h" ||
+           extension == ".hpp" || extension == ".cc" || extension == ".cxx";
+}
+
+bool is_ignored_path(const std::filesystem::path& path) {
+    const auto value = path.generic_string();
+    return value.find("/.git/") != std::string::npos ||
+           value.find("/build/") != std::string::npos ||
+           value.find("/.venv/") != std::string::npos ||
+           value.find("/distribution/") != std::string::npos;
+}
+
+std::string read_git_hash(const std::filesystem::path& project) {
+    const auto output_file = project / ".cap_git_hash.tmp";
+    const auto command =
+        "git -C \"" + project.string() +
+        "\" rev-parse --short HEAD > \"" + output_file.string() +
+        "\" 2>nul";
+
+    std::system(command.c_str());
+
+    std::ifstream input(output_file);
+    std::string hash;
+    std::getline(input, hash);
+
+    std::error_code ignored;
+    std::filesystem::remove(output_file, ignored);
+
+    return hash.empty() ? "UNKNOWN" : hash;
+}
+
+std::string current_timestamp() {
+    const auto now = std::chrono::system_clock::now();
+    const auto time = std::chrono::system_clock::to_time_t(now);
+    std::tm local_time{};
+
+#ifdef _WIN32
+    localtime_s(&local_time, &time);
+#else
+    localtime_r(&time, &local_time);
+#endif
+
+    std::ostringstream output;
+    output << std::put_time(&local_time, "%Y-%m-%dT%H:%M:%S");
+    return output.str();
+}
+
+std::string relative_or_original(
+    const std::filesystem::path& file,
+    const std::filesystem::path& project) {
+
+    std::error_code error;
+    const auto relative = std::filesystem::relative(file, project, error);
+    return error ? file.generic_string() : relative.generic_string();
+}
+
+} // namespace
+
+int ScanCommand::execute(const std::filesystem::path& project) const {
+    capcom::yaml::YamlStore store{project};
+    const auto items = store.load_all();
+
+    std::map<std::string, std::vector<capcom::yaml::Implementation>> found;
+
+    const std::regex start_pattern(
+        R"CAP(/\*\s*@cap-start:\s*([A-Za-z0-9_-]+)(?:\s*\*/)?\s*)CAP");
+    const std::regex end_pattern(
+        R"CAP(/\*\s*@cap-end:\s*([A-Za-z0-9_-]+)\s*\*/)CAP");
+
+    const auto git_hash = read_git_hash(project);
+
+    for (auto iterator = std::filesystem::recursive_directory_iterator(project);
+         iterator != std::filesystem::recursive_directory_iterator();
+         ++iterator) {
+
+        if (iterator->is_directory() && is_ignored_path(iterator->path())) {
+            iterator.disable_recursion_pending();
+            continue;
+        }
+
+        if (!iterator->is_regular_file() ||
+            !is_source_file(iterator->path()) ||
+            is_ignored_path(iterator->path())) {
+            continue;
+        }
+
+        std::ifstream input(iterator->path());
+        if (!input) {
+            throw std::runtime_error(
+                "Cannot read source file: " + iterator->path().string());
+        }
+
+        std::string line;
+        std::string active_uid;
+        int line_number = 0;
+        int start_line = 0;
+
+        while (std::getline(input, line)) {
+            ++line_number;
+            std::smatch match;
+
+            if (std::regex_search(line, match, start_pattern)) {
+                if (!active_uid.empty()) {
+                    throw std::runtime_error(
+                        "Nested @cap-start in " + iterator->path().string());
+                }
+
+                active_uid = capcom::yaml::normalize_uid(match[1].str());
+                start_line = line_number;
+            }
+
+            if (std::regex_search(line, match, end_pattern)) {
+                const auto end_uid =
+                    capcom::yaml::normalize_uid(match[1].str());
+
+                if (active_uid.empty() || end_uid != active_uid) {
+                    throw std::runtime_error(
+                        "Mismatched @cap-end in " + iterator->path().string());
+                }
+
+                if (!items.contains(end_uid)) {
+                    throw std::runtime_error(
+                        "Unknown UID in source: " + end_uid);
+                }
+
+                found[end_uid].push_back({
+                    relative_or_original(iterator->path(), project),
+                    start_line,
+                    line_number,
+                    git_hash,
+                });
+
+                active_uid.clear();
+            }
+        }
+
+        if (!active_uid.empty()) {
+            throw std::runtime_error(
+                "Missing @cap-end for " + active_uid + " in " +
+                iterator->path().string());
+        }
+    }
+
+    store.replace_implementations(found);
+    std::cout << "Scan complete: " << found.size()
+              << " item(s) implemented. Git " << git_hash << '\n';
+    return 0;
+}
+
+int StatusCommand::execute(const std::filesystem::path& project) const {
+    const auto items = capcom::yaml::YamlStore{project}.load_all();
+
+    std::cout << std::left << std::setw(10) << "UID"
+              << std::setw(34) << "TITLE"
+              << std::setw(14) << "STATUS"
+              << std::setw(10) << "IMPL"
+              << "TEST\n"
+              << std::string(78, '-') << '\n';
+
+    for (const auto& [uid, item] : items) {
+        const bool implemented = !item.implementations.empty();
+        const bool tested =
+            item.test.status == "Passed" || item.test.status == "Tested";
+        const bool warning = item.status == "Draft" || !implemented;
+
+        std::cout << (warning ? "\x1b[33m" : "\x1b[32m")
+                  << std::setw(10) << uid
+                  << std::setw(34) << item.title.substr(0, 32)
+                  << std::setw(14) << item.status
+                  << std::setw(10) << (implemented ? "Ja" : "Nein")
+                  << (tested ? "Ja" : "Nein")
+                  << "\x1b[0m\n";
+    }
+
+    return 0;
+}
+
+int ValidateCommand::execute(const std::filesystem::path& project) const {
+    capcom::yaml::YamlStore store{project};
+    const auto errors = store.validate(store.load_all());
+
+    if (errors.empty()) {
+        std::cout << "Validation successful.\n";
+        return 0;
+    }
+
+    std::cerr << "Validation failed:\n";
+    for (const auto& error : errors) {
+        std::cerr << "  - " << error << '\n';
+    }
+    return 2;
+}
+
+int TestImportCommand::execute(
+    const std::filesystem::path& project,
+    const std::filesystem::path& result_file) const {
+
+    std::ifstream input(result_file, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error(
+            "Cannot read test result: " + result_file.string());
+    }
+
+    const std::string data{
+        std::istreambuf_iterator<char>{input},
+        std::istreambuf_iterator<char>{},
+    };
+
+    capcom::yaml::YamlStore store{project};
+    int imported_count = 0;
+    const auto source = relative_or_original(result_file, project);
+
+    if (result_file.extension() == ".xml") {
+        const std::regex testcase_pattern(
+            R"CAP(<testcase[^>]*name="([^"]+)"[^>]*>([\s\S]*?)</testcase>|<testcase[^>]*name="([^"]+)"[^>]*/>)CAP");
+        const std::regex uid_pattern(
+            R"CAP(([A-Za-z]+)[_-]?(\d+))CAP");
+
+        for (auto iterator = std::sregex_iterator(
+                 data.begin(), data.end(), testcase_pattern);
+             iterator != std::sregex_iterator();
+             ++iterator) {
+
+            const auto name = (*iterator)[1].matched
+                ? (*iterator)[1].str()
+                : (*iterator)[3].str();
+
+            std::smatch uid_match;
+            if (!std::regex_search(name, uid_match, uid_pattern)) {
+                continue;
+            }
+
+            const auto uid = capcom::yaml::normalize_uid(
+                uid_match[1].str() + "-" + uid_match[2].str());
+            const auto body = (*iterator)[2].str();
+            const bool failed =
+                body.find("<failure") != std::string::npos ||
+                body.find("<error") != std::string::npos;
+
+            store.update_test(uid, {
+                failed ? "Failed" : "Passed",
+                source,
+                current_timestamp(),
+                failed ? "See JUnit report" : "",
+            });
+            ++imported_count;
+        }
+    } else if (result_file.extension() == ".json") {
+        const std::regex result_pattern(
+            R"CAP("uid"\s*:\s*"([^"]+)"[\s\S]*?"status"\s*:\s*"([^"]+)"(?:[\s\S]*?"message"\s*:\s*"([^"]*)")?)CAP");
+
+        for (auto iterator = std::sregex_iterator(
+                 data.begin(), data.end(), result_pattern);
+             iterator != std::sregex_iterator();
+             ++iterator) {
+
+            store.update_test((*iterator)[1].str(), {
+                (*iterator)[2].str(),
+                source,
+                current_timestamp(),
+                (*iterator)[3].str(),
+            });
+            ++imported_count;
+        }
+    } else {
+        throw std::runtime_error(
+            "Unsupported result format. Use .xml or .json.");
+    }
+
+    if (imported_count == 0) {
+        throw std::runtime_error(
+            "No CapCom test result IDs were found in " +
+            result_file.string());
+    }
+
+    std::cout << "Imported " << imported_count << " test result(s).\n";
+    return 0;
+}
+
+} // namespace capcom::commands
+
+
+===== FILE: .\cli\src\config\app_config.cpp =====
+
+#include "capcom/config/app_config.hpp"
+#include <fstream>
+#include <stdexcept>
+namespace capcom::config {
+AppConfig ConfigLoader::load(const std::filesystem::path& project_directory) const {
+    const auto file = project_directory / ".capcom_config.json";
+    if (!std::filesystem::is_regular_file(file)) throw std::runtime_error("Not a CapCom project. Run 'cap init' first.");
+    return {};
+}
+void ConfigLoader::write_default(const std::filesystem::path& project_directory) const {
+    const auto path = project_directory / ".capcom_config.json";
+    if (std::filesystem::exists(path)) return;
+    std::ofstream out(path, std::ios::binary);
+    if (!out) throw std::runtime_error("Cannot create " + path.string());
+    out << "{\n  \"schema_version\": 1,\n  \"api_url\": \"http://127.0.0.1:8000\",\n"
+           "  \"requirements_directory\": \"reqs\"\n}\n";
+}
+}
+
+
+===== FILE: .\cli\src\http\http_client.cpp =====
+
+#include "capcom/http/http_client.hpp"
+#include <utility>
+namespace capcom::http {
+HttpClient::HttpClient(HttpClientOptions options) : options_{std::move(options)} {}
+HttpResponse HttpClient::post_json(std::string_view route, std::string_view json_body) const { (void)route; (void)json_body; return {}; }
+}
+
+
+===== FILE: .\cli\src\identity\identity_manager_windows.cpp =====
+
+#include "capcom/identity/identity_manager.hpp"
+#include "capcom/security/crypto.hpp"
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <regex>
+#include <stdexcept>
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#include <ncrypt.h>
+#include <wincrypt.h>
+#endif
+namespace capcom::identity {
+namespace {
+std::filesystem::path identity_path() {
+    const char* profile = std::getenv("USERPROFILE");
+    if (profile == nullptr || *profile == '\0') throw std::runtime_error("USERPROFILE is unavailable");
+    return std::filesystem::path{profile} / ".captainslog_identity.json";
+}
+std::string escape_json(const std::string& value) {
+    std::string out;
+    for (char c : value) { if (c == '\\' || c == '"') out.push_back('\\'); out.push_back(c); }
+    return out;
+}
+std::string field(const std::string& json, const std::string& name) {
+    std::smatch match;
+    const std::regex pattern{"\"" + name + "\"\\s*:\\s*\"([^\"]*)\""};
+    if (!std::regex_search(json, match, pattern)) throw std::runtime_error("Invalid identity file: missing " + name);
+    return match[1].str();
+}
+#ifdef _WIN32
+std::string encode(const std::vector<unsigned char>& bytes) {
+    DWORD size{};
+    CryptBinaryToStringA(bytes.data(), static_cast<DWORD>(bytes.size()),
+        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, nullptr, &size);
+    std::string result(size, '\0');
+    if (!CryptBinaryToStringA(bytes.data(), static_cast<DWORD>(bytes.size()),
+        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, result.data(), &size)) {
+        throw std::runtime_error("Public key encoding failed");
+    }
+    if (!result.empty() && result.back() == '\0') result.pop_back();
+    return result;
+}
+Identity create() {
+    std::cout << "Captain's Log identity setup\n"
+              << "Bitte gib deinen vollen Namen fuer den Audit-Trail ein: " << std::flush;
+    std::string name;
+    std::getline(std::cin, name);
+    if (name.empty()) throw std::runtime_error("A full name is required");
+    const auto token = capcom::security::random_hex(16);
+    const auto key_name = "CaptainsLog-Audit-" + token;
+    NCRYPT_PROV_HANDLE provider{};
+    NCRYPT_KEY_HANDLE key{};
+    if (NCryptOpenStorageProvider(&provider, MS_KEY_STORAGE_PROVIDER, 0) != ERROR_SUCCESS)
+        throw std::runtime_error("Cannot open Windows key provider");
+    std::wstring wide_key(key_name.begin(), key_name.end());
+    if (NCryptCreatePersistedKey(provider, &key, NCRYPT_RSA_ALGORITHM,
+        wide_key.c_str(), 0, NCRYPT_OVERWRITE_KEY_FLAG) != ERROR_SUCCESS)
+        throw std::runtime_error("Cannot create audit key");
+    DWORD length = 2048;
+    NCryptSetProperty(key, NCRYPT_LENGTH_PROPERTY,
+        reinterpret_cast<PBYTE>(&length), sizeof(length), 0);
+    DWORD export_policy = 0;
+    NCryptSetProperty(key, NCRYPT_EXPORT_POLICY_PROPERTY,
+        reinterpret_cast<PBYTE>(&export_policy), sizeof(export_policy), 0);
+    if (NCryptFinalizeKey(key, 0) != ERROR_SUCCESS)
+        throw std::runtime_error("Cannot finalize audit key");
+    DWORD blob_size{};
+    NCryptExportKey(key, 0, BCRYPT_RSAPUBLIC_BLOB, nullptr,
+        nullptr, 0, &blob_size, 0);
+    std::vector<unsigned char> blob(blob_size);
+    if (NCryptExportKey(key, 0, BCRYPT_RSAPUBLIC_BLOB, nullptr,
+        blob.data(), blob_size, &blob_size, 0) != ERROR_SUCCESS)
+        throw std::runtime_error("Cannot export public key");
+    blob.resize(blob_size);
+    NCryptFreeObject(key);
+    NCryptFreeObject(provider);
+    char computer[MAX_COMPUTERNAME_LENGTH + 1]{};
+    DWORD computer_size = sizeof(computer);
+    GetComputerNameA(computer, &computer_size);
+    Identity identity{name, "HOST-" + capcom::security::sha256_hex(
+        std::string{computer} + token).substr(0, 20), key_name,
+        "KEY-" + capcom::security::sha256_hex(encode(blob)).substr(0, 20),
+        "RSA-PSS-SHA256", encode(blob)};
+    std::ofstream output(identity_path(), std::ios::trunc);
+    output << "{\n"
+           << "  \"schema_version\": 1,\n"
+           << "  \"full_name\": \"" << escape_json(identity.full_name) << "\",\n"
+           << "  \"host_id\": \"" << identity.host_id << "\",\n"
+           << "  \"key_name\": \"" << identity.key_name << "\",\n"
+           << "  \"key_id\": \"" << identity.key_id << "\",\n"
+           << "  \"algorithm\": \"" << identity.algorithm << "\",\n"
+           << "  \"public_key\": \"" << identity.public_key_base64 << "\"\n}\n";
+    std::filesystem::permissions(identity_path(),
+        std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
+        std::filesystem::perm_options::replace);
+    return identity;
+}
+#endif
+}
+Identity IdentityManager::load_or_create() const {
+    const auto path = identity_path();
+    if (!std::filesystem::exists(path)) {
+#ifdef _WIN32
+        return create();
+#else
+        throw std::runtime_error("Captain's Log cryptographic identity requires Windows");
+#endif
+    }
+    std::ifstream input(path);
+    const std::string json{std::istreambuf_iterator<char>{input}, {}};
+    return {field(json, "full_name"), field(json, "host_id"),
+        field(json, "key_name"), field(json, "key_id"),
+        field(json, "algorithm"), field(json, "public_key")};
+}
+}
+
+
+===== FILE: .\cli\src\requirements\requirement_store.cpp =====
+
+#include "capcom/requirements/requirement_store.hpp"
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+namespace capcom::requirements { namespace {
+std::string trim(std::string s){auto a=s.find_first_not_of(" \t\r\n"); if(a==std::string::npos)return{}; auto b=s.find_last_not_of(" \t\r\n"); return s.substr(a,b-a+1);}
+std::string upper(std::string s){std::transform(s.begin(),s.end(),s.begin(),[](unsigned char c){return static_cast<char>(std::toupper(c));});return s;}
+std::string unquote(std::string s){s=trim(s);if(s.size()>=2&&s.front()=='"'&&s.back()=='"')s=s.substr(1,s.size()-2);return s;}
+std::vector<std::string> list(const std::string& s){auto a=s.find('['),b=s.rfind(']');std::vector<std::string> out;if(a==std::string::npos||b<=a)return out;std::stringstream in{s.substr(a+1,b-a-1)};std::string v;while(std::getline(in,v,',')){v=upper(unquote(v));if(!v.empty())out.push_back(v);}return out;}
+std::string render(std::vector<std::string> v){std::sort(v.begin(),v.end());v.erase(std::unique(v.begin(),v.end()),v.end());std::ostringstream o;o<<'[';for(size_t i=0;i<v.size();++i){if(i)o<<", ";o<<v[i];}o<<']';return o.str();}
+std::vector<std::string> read(const std::filesystem::path& p){std::ifstream in(p);if(!in)throw std::runtime_error("Cannot read "+p.string());std::vector<std::string> v;std::string s;while(std::getline(in,s)){if(!s.empty()&&s.back()=='\r')s.pop_back();v.push_back(s);}return v;}
+void write(const std::filesystem::path& p,const std::vector<std::string>& v){auto t=p;t+=".tmp";{std::ofstream o(t,std::ios::trunc);if(!o)throw std::runtime_error("Cannot write "+t.string());for(auto&s:v)o<<s<<'\n';}std::error_code e;std::filesystem::remove(p,e);e.clear();std::filesystem::rename(t,p,e);if(e)throw std::runtime_error("Cannot replace "+p.string());}
+void update(const std::filesystem::path&p,const std::string&field,const std::string&id,bool add){auto lines=read(p);auto prefix=field+":";auto it=std::find_if(lines.begin(),lines.end(),[&](auto&s){return s.rfind(prefix,0)==0;});auto values=it==lines.end()?std::vector<std::string>{}:list(*it);if(add){if(std::find(values.begin(),values.end(),id)==values.end())values.push_back(id);}else values.erase(std::remove(values.begin(),values.end(),id),values.end());auto line=prefix+" "+render(values);if(it!=lines.end())*it=line;else{auto pos=std::find_if(lines.begin(),lines.end(),[](auto&s){return s.rfind("integration_template:",0)==0;});lines.insert(pos,line);}write(p,lines);}
+Requirement parse(const std::filesystem::path&p){Requirement r;r.file=p;for(auto&line:read(p)){auto x=line.find(':');if(x==std::string::npos)continue;auto k=trim(line.substr(0,x)),v=line.substr(x+1);if(k=="uid")r.uid=upper(unquote(v));else if(k=="type")r.type=upper(unquote(v));else if(k=="title")r.title=unquote(v);else if(k=="status")r.status=unquote(v);else if(k=="parents")r.parents=list(v);else if(k=="children")r.children=list(v);}if(r.uid.empty())throw std::runtime_error("Missing uid in "+p.string());return r;}
+bool reachable(const std::map<std::string,Requirement>&m,const std::string&s,const std::string&t){std::vector<std::string> q{s};std::set<std::string> seen;while(!q.empty()){auto x=q.back();q.pop_back();if(x==t)return true;if(!seen.insert(x).second)continue;auto it=m.find(x);if(it!=m.end())q.insert(q.end(),it->second.children.begin(),it->second.children.end());}return false;}
+}
+RequirementStore::RequirementStore(std::filesystem::path p):project_(std::move(p)){}
+std::map<std::string,Requirement> RequirementStore::load_all()const{auto d=project_/"reqs";if(!std::filesystem::is_directory(d))throw std::runtime_error("Requirements directory not found. Run 'cap init'.");std::map<std::string,Requirement> m;for(auto&e:std::filesystem::directory_iterator(d)){auto ext=upper(e.path().extension().string());if(e.is_regular_file()&&(ext==".YAML"||ext==".YML")){auto r=parse(e.path());if(!m.emplace(r.uid,std::move(r)).second)throw std::runtime_error("Duplicate UID in "+e.path().string());}}return m;}
+void RequirementStore::add_link(const std::string&c0,const std::string&p0)const{auto c=upper(c0),p=upper(p0);if(c==p)throw std::runtime_error("An item cannot link to itself.");auto m=load_all();auto ci=m.find(c),pi=m.find(p);if(ci==m.end())throw std::runtime_error("Child not found: "+c);if(pi==m.end())throw std::runtime_error("Parent not found: "+p);if(reachable(m,c,p))throw std::runtime_error("Link would create a cycle.");update(ci->second.file,"parents",p,true);try{update(pi->second.file,"children",c,true);}catch(...){update(ci->second.file,"parents",p,false);throw;}}
+void RequirementStore::remove_link(const std::string&c0,const std::string&p0)const{auto c=upper(c0),p=upper(p0);auto m=load_all();auto ci=m.find(c),pi=m.find(p);if(ci==m.end()||pi==m.end())throw std::runtime_error("Child or parent not found.");update(ci->second.file,"parents",p,false);update(pi->second.file,"children",c,false);}
+}
+
+
+===== FILE: .\cli\src\security\crypto.cpp =====
+
+#include "capcom/security/crypto.hpp"
+#include <stdexcept>
+#include <vector>
+#include <sstream>
+#include <iomanip>
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#include <ncrypt.h>
+#include <wincrypt.h>
+#endif
+namespace capcom::security {
+#ifdef _WIN32
+namespace {
+void check_nt(NTSTATUS status, const char* operation) {
+    if (status < 0) throw std::runtime_error(std::string(operation) + " failed");
+}
+void check_sec(SECURITY_STATUS status, const char* operation) {
+    if (status != ERROR_SUCCESS) throw std::runtime_error(std::string(operation) + " failed");
+}
+std::wstring widen(const std::string& value) {
+    if (value.empty()) return {};
+    const int size = MultiByteToWideChar(CP_UTF8, 0, value.data(),
+        static_cast<int>(value.size()), nullptr, 0);
+    std::wstring result(static_cast<std::size_t>(size), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, value.data(), static_cast<int>(value.size()),
+        result.data(), size);
+    return result;
+}
+std::vector<unsigned char> hash_sha256(std::string_view data) {
+    BCRYPT_ALG_HANDLE algorithm{};
+    BCRYPT_HASH_HANDLE hash{};
+    check_nt(BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM,
+        nullptr, 0), "BCryptOpenAlgorithmProvider");
+    DWORD object_size{}, result_size{};
+    check_nt(BCryptGetProperty(algorithm, BCRYPT_OBJECT_LENGTH,
+        reinterpret_cast<PUCHAR>(&object_size), sizeof(object_size),
+        &result_size, 0), "BCryptGetProperty");
+    std::vector<unsigned char> object(object_size);
+    std::vector<unsigned char> digest(32);
+    check_nt(BCryptCreateHash(algorithm, &hash, object.data(), object_size,
+        nullptr, 0, 0), "BCryptCreateHash");
+    check_nt(BCryptHashData(hash,
+        reinterpret_cast<PUCHAR>(const_cast<char*>(data.data())),
+        static_cast<ULONG>(data.size()), 0), "BCryptHashData");
+    check_nt(BCryptFinishHash(hash, digest.data(),
+        static_cast<ULONG>(digest.size()), 0), "BCryptFinishHash");
+    BCryptDestroyHash(hash);
+    BCryptCloseAlgorithmProvider(algorithm, 0);
+    return digest;
+}
+std::string base64_encode(const std::vector<unsigned char>& bytes) {
+    DWORD size{};
+    if (!CryptBinaryToStringA(bytes.data(), static_cast<DWORD>(bytes.size()),
+        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, nullptr, &size)) {
+        throw std::runtime_error("Base64 encoding failed");
+    }
+    std::string result(size, '\0');
+    if (!CryptBinaryToStringA(bytes.data(), static_cast<DWORD>(bytes.size()),
+        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, result.data(), &size)) {
+        throw std::runtime_error("Base64 encoding failed");
+    }
+    if (!result.empty() && result.back() == '\0') result.pop_back();
+    return result;
+}
+std::vector<unsigned char> base64_decode(const std::string& text) {
+    DWORD size{};
+    if (!CryptStringToBinaryA(text.c_str(), 0, CRYPT_STRING_BASE64,
+        nullptr, &size, nullptr, nullptr)) {
+        throw std::runtime_error("Base64 decoding failed");
+    }
+    std::vector<unsigned char> result(size);
+    if (!CryptStringToBinaryA(text.c_str(), 0, CRYPT_STRING_BASE64,
+        result.data(), &size, nullptr, nullptr)) {
+        throw std::runtime_error("Base64 decoding failed");
+    }
+    result.resize(size);
+    return result;
+}
+}
+std::string sha256_hex(std::string_view data) {
+    const auto digest = hash_sha256(data);
+    std::ostringstream output;
+    output << std::hex << std::setfill('0');
+    for (const auto byte : digest) output << std::setw(2) << static_cast<int>(byte);
+    return output.str();
+}
+std::string random_hex(std::size_t bytes) {
+    std::vector<unsigned char> value(bytes);
+    check_nt(BCryptGenRandom(nullptr, value.data(), static_cast<ULONG>(value.size()),
+        BCRYPT_USE_SYSTEM_PREFERRED_RNG), "BCryptGenRandom");
+    std::ostringstream output;
+    output << std::hex << std::setfill('0');
+    for (const auto byte : value) output << std::setw(2) << static_cast<int>(byte);
+    return output.str();
+}
+std::string sign_rsa_pss_sha256(const std::string& key_name,
+                                std::string_view payload) {
+    NCRYPT_PROV_HANDLE provider{};
+    NCRYPT_KEY_HANDLE key{};
+    check_sec(NCryptOpenStorageProvider(&provider,
+        MS_KEY_STORAGE_PROVIDER, 0), "NCryptOpenStorageProvider");
+    const auto wide_name = widen(key_name);
+    check_sec(NCryptOpenKey(provider, &key, wide_name.c_str(), 0, 0),
+        "NCryptOpenKey");
+    const auto digest = hash_sha256(payload);
+    BCRYPT_PSS_PADDING_INFO padding{BCRYPT_SHA256_ALGORITHM, 32};
+    DWORD size{};
+    check_sec(NCryptSignHash(key, &padding,
+        const_cast<PBYTE>(digest.data()), static_cast<DWORD>(digest.size()),
+        nullptr, 0, &size, NCRYPT_PAD_PSS_FLAG), "NCryptSignHash");
+    std::vector<unsigned char> signature(size);
+    check_sec(NCryptSignHash(key, &padding,
+        const_cast<PBYTE>(digest.data()), static_cast<DWORD>(digest.size()),
+        signature.data(), size, &size, NCRYPT_PAD_PSS_FLAG), "NCryptSignHash");
+    signature.resize(size);
+    NCryptFreeObject(key);
+    NCryptFreeObject(provider);
+    return base64_encode(signature);
+}
+bool verify_rsa_pss_sha256(const std::string& public_key_base64,
+                           std::string_view payload,
+                           const std::string& signature_base64) {
+    BCRYPT_ALG_HANDLE algorithm{};
+    BCRYPT_KEY_HANDLE key{};
+    check_nt(BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_RSA_ALGORITHM,
+        nullptr, 0), "BCryptOpenAlgorithmProvider");
+    auto public_blob = base64_decode(public_key_base64);
+    check_nt(BCryptImportKeyPair(algorithm, nullptr, BCRYPT_RSAPUBLIC_BLOB,
+        &key, public_blob.data(), static_cast<ULONG>(public_blob.size()), 0),
+        "BCryptImportKeyPair");
+    const auto digest = hash_sha256(payload);
+    auto signature = base64_decode(signature_base64);
+    BCRYPT_PSS_PADDING_INFO padding{BCRYPT_SHA256_ALGORITHM, 32};
+    const auto status = BCryptVerifySignature(key, &padding,
+        const_cast<PUCHAR>(digest.data()), static_cast<ULONG>(digest.size()),
+        signature.data(), static_cast<ULONG>(signature.size()),
+        BCRYPT_PAD_PSS);
+    BCryptDestroyKey(key);
+    BCryptCloseAlgorithmProvider(algorithm, 0);
+    return status >= 0;
+}
+#else
+std::string sha256_hex(std::string_view) { throw std::runtime_error("Windows CNG required"); }
+std::string random_hex(std::size_t) { throw std::runtime_error("Windows CNG required"); }
+std::string sign_rsa_pss_sha256(const std::string&, std::string_view) { throw std::runtime_error("Windows CNG required"); }
+bool verify_rsa_pss_sha256(const std::string&, std::string_view, const std::string&) { return false; }
+#endif
+}
+
+
+===== FILE: .\cli\src\yaml\yaml_store.cpp =====
+
+#include "capcom/yaml/yaml_store.hpp"
+#include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+namespace capcom::yaml { namespace {
+std::string trim(std::string s){auto a=s.find_first_not_of(" \t\r\n");if(a==std::string::npos)return{};auto b=s.find_last_not_of(" \t\r\n");return s.substr(a,b-a+1);}
+std::string unquote(std::string s){s=trim(s);if(s.size()>1&&s.front()=='"'&&s.back()=='"')s=s.substr(1,s.size()-2);return s;}
+std::vector<std::string> lines(const std::filesystem::path&p){std::ifstream in(p);if(!in)throw std::runtime_error("Cannot read "+p.string());std::vector<std::string>v;std::string s;while(std::getline(in,s)){if(!s.empty()&&s.back()=='\r')s.pop_back();v.push_back(s);}return v;}
+void save(const std::filesystem::path&p,const std::vector<std::string>&v){auto t=p;t+=".tmp";{std::ofstream o(t,std::ios::trunc);if(!o)throw std::runtime_error("Cannot write "+t.string());for(auto&s:v)o<<s<<'\n';}std::error_code e;std::filesystem::remove(p,e);e.clear();std::filesystem::rename(t,p,e);if(e)throw std::runtime_error("Cannot replace "+p.string()+": "+e.message());}
+std::vector<std::string> inline_list(const std::string&s){auto a=s.find('['),b=s.rfind(']');std::vector<std::string>v;if(a==std::string::npos||b<=a)return v;std::stringstream in{s.substr(a+1,b-a-1)};std::string x;while(std::getline(in,x,',')){x=normalize_uid(unquote(x));if(!x.empty())v.push_back(x);}return v;}
+size_t section_end(const std::vector<std::string>&v,size_t start){size_t i=start+1;while(i<v.size()&&(v[i].empty()||v[i][0]==' '||v[i][0]=='\t'))++i;return i;}
+void replace_section(const std::filesystem::path&p,const std::string&name,const std::vector<std::string>&block){auto v=lines(p);auto it=std::find_if(v.begin(),v.end(),[&](auto&s){return s.rfind(name+":",0)==0;});if(it!=v.end()){auto pos=static_cast<size_t>(it-v.begin());v.erase(v.begin()+static_cast<long long>(pos),v.begin()+static_cast<long long>(section_end(v,pos)));v.insert(v.begin()+static_cast<long long>(pos),block.begin(),block.end());}else{auto pos=std::find_if(v.begin(),v.end(),[](auto&s){return s.rfind("integration_template:",0)==0;});v.insert(pos,block.begin(),block.end());}save(p,v);}
+std::string esc(std::string s){std::string o;for(char c:s){if(c=='"'||c=='\\')o+='\\';if(c=='\n')o+="\\n";else if(c!='\r')o+=c;}return o;}
+Item parse(const std::filesystem::path&p){Item r;r.file=p;auto v=lines(p);for(size_t i=0;i<v.size();++i){auto raw=v[i];auto x=raw.find(':');if(x==std::string::npos)continue;auto k=trim(raw.substr(0,x)),val=unquote(raw.substr(x+1));if(k=="uid")r.uid=normalize_uid(val);else if(k=="type")r.type=val;else if(k=="status")r.status=val;else if(k=="title")r.title=val;else if(k=="text")r.text=val;else if(k=="rationale")r.rationale=val;else if(k=="version")r.version=val;else if(k=="git_hash")r.git_hash=val;else if(k=="parents")r.parents=inline_list(raw);else if(k=="children")r.children=inline_list(raw);else if(k=="attributes"){for(size_t j=i+1;j<v.size()&&v[j].rfind("  ",0)==0;++j){auto q=v[j].find(':');if(q!=std::string::npos)r.attributes[trim(v[j].substr(0,q))]=unquote(v[j].substr(q+1));}}else if(k=="implementation"){Implementation z;for(size_t j=i+1;j<v.size()&&v[j].rfind("  ",0)==0;++j){auto q=v[j].find(':');if(q==std::string::npos)continue;auto sk=trim(v[j].substr(0,q));if(sk.rfind("- ",0)==0)sk=trim(sk.substr(2));auto sv=unquote(v[j].substr(q+1));if(sk=="file"){if(!z.file.empty())r.implementations.push_back(z),z={};z.file=sv;}else if(sk=="start_line")z.start_line=std::stoi(sv);else if(sk=="end_line")z.end_line=std::stoi(sv);else if(sk=="git_hash")z.git_hash=sv;}if(!z.file.empty())r.implementations.push_back(z);}else if(k=="test_result"){for(size_t j=i+1;j<v.size()&&v[j].rfind("  ",0)==0;++j){auto q=v[j].find(':');if(q==std::string::npos)continue;auto sk=trim(v[j].substr(0,q)),sv=unquote(v[j].substr(q+1));if(sk=="status")r.test.status=sv;else if(sk=="source")r.test.source=sv;else if(sk=="timestamp")r.test.timestamp=sv;else if(sk=="message")r.test.message=sv;}}}return r;}
+}
+std::string normalize_uid(std::string s){s=trim(s);std::transform(s.begin(),s.end(),s.begin(),[](unsigned char c){return static_cast<char>(std::toupper(c));});std::replace(s.begin(),s.end(),'_','-');if(s.find('-')==std::string::npos){auto p=std::find_if(s.begin(),s.end(),[](unsigned char c){return std::isdigit(c);});if(p!=s.end())s.insert(p,'-');}return s;}
+YamlStore::YamlStore(std::filesystem::path p):project_(std::move(p)){}
+std::map<std::string,Item> YamlStore::load_all()const{std::map<std::string,Item>m;auto d=project_/"reqs";if(!std::filesystem::is_directory(d))throw std::runtime_error("reqs directory missing");for(auto&e:std::filesystem::directory_iterator(d)){auto ext=e.path().extension().string();if(e.is_regular_file()&&(ext==".yaml"||ext==".yml")){auto r=parse(e.path());if(r.uid.empty())throw std::runtime_error("Missing uid in "+e.path().string());if(!m.emplace(r.uid,std::move(r)).second)throw std::runtime_error("Duplicate UID: "+r.uid);}}return m;}
+void YamlStore::replace_implementations(const std::map<std::string,std::vector<Implementation>>&x)const{auto m=load_all();for(auto&[id,item]:m){std::vector<std::string>b{"implementation:"};auto it=x.find(id);if(it==x.end()||it->second.empty())b={"implementation: []"};else for(auto&z:it->second){b.push_back("  - file: \""+esc(z.file)+"\"");b.push_back("    start_line: "+std::to_string(z.start_line));b.push_back("    end_line: "+std::to_string(z.end_line));b.push_back("    git_hash: \""+esc(z.git_hash)+"\"");}replace_section(item.file,"implementation",b);}}
+void YamlStore::update_test(const std::string&id0,const TestResult&r)const{auto m=load_all();const auto id=normalize_uid(id0);auto it=m.find(id);if(it==m.end())throw std::runtime_error("Test UID not found: "+id);replace_section(it->second.file,"test_result",{"test_result:","  status: "+r.status,"  source: \""+esc(r.source)+"\"","  timestamp: \""+esc(r.timestamp)+"\"","  message: \""+esc(r.message)+"\""});}
+std::vector<std::string> YamlStore::validate(const std::map<std::string,Item>&m)const{std::vector<std::string>e;for(auto&[id,r]:m){auto need=[&](auto&v,const char*n){if(v.empty())e.push_back(id+": missing "+n);};need(r.uid,"uid");need(r.type,"type");need(r.status,"status");need(r.title,"title");need(r.text,"text");need(r.rationale,"rationale");need(r.version,"version");if((r.type=="SRS"||r.type=="ARCH"||r.type=="LLD")){if(!r.attributes.contains("iec62304_class"))e.push_back(id+": missing attributes.iec62304_class");if(!r.attributes.contains("justification"))e.push_back(id+": missing attributes.justification");}for(auto&p:r.parents){auto it=m.find(p);if(it==m.end())e.push_back(id+": missing parent "+p);else if(std::find(it->second.children.begin(),it->second.children.end(),id)==it->second.children.end())e.push_back(id+": asymmetric parent link "+p);}for(auto&c:r.children){auto it=m.find(c);if(it==m.end())e.push_back(id+": missing child "+c);else if(std::find(it->second.parents.begin(),it->second.parents.end(),id)==it->second.parents.end())e.push_back(id+": asymmetric child link "+c);}}return e;}
+}
+
+
+===== FILE: .\cli\tests\CMakeLists.txt =====
+
+add_test(NAME cap_help COMMAND cap help)
+add_test(NAME cap_version COMMAND cap version)
+

@@ -24,13 +24,6 @@ std::string trim(std::string value) {
     return value.substr(first, last - first + 1);
 }
 
-std::string unquote(std::string value) {
-    value = trim(std::move(value));
-    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-        value = value.substr(1, value.size() - 2);
-    }
-    return value;
-}
 
 std::vector<std::string> read_lines(const std::filesystem::path& file) {
     std::ifstream input(file, std::ios::binary);
@@ -72,57 +65,6 @@ void replace_status(
     if (iterator == lines.end()) throw std::runtime_error("Missing status field in " + file.string());
     *iterator = "status: " + status;
     save_atomic(file, lines);
-}
-
-std::string first_author_key(const std::filesystem::path& file) {
-    const auto lines = read_lines(file);
-    bool history = false;
-    std::string current_action;
-    for (const auto& line : lines) {
-        if (line.rfind("history:", 0) == 0) {
-            history = true;
-            continue;
-        }
-        if (!history) continue;
-        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
-
-        auto normalized = trim(line);
-        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
-        const auto colon = normalized.find(':');
-        if (colon == std::string::npos) continue;
-        const auto key = trim(normalized.substr(0, colon));
-        const auto value = unquote(normalized.substr(colon + 1));
-        if (key == "action") current_action = value;
-        if (key == "key_id" && current_action == "ITEM_CREATED") return value;
-    }
-    throw std::runtime_error("Cannot determine author key from ITEM_CREATED history.");
-}
-
-std::string latest_submitter_key(const std::filesystem::path& file) {
-    const auto lines = read_lines(file);
-    bool history = false;
-    std::string action;
-    std::string latest;
-    for (const auto& line : lines) {
-        if (line.rfind("history:", 0) == 0) {
-            history = true;
-            continue;
-        }
-        if (!history) continue;
-        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
-
-        auto normalized = trim(line);
-        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
-        const auto colon = normalized.find(':');
-        if (colon == std::string::npos) continue;
-        const auto key = trim(normalized.substr(0, colon));
-        const auto value = unquote(normalized.substr(colon + 1));
-        if (key == "timestamp") action.clear();
-        else if (key == "action") action = value;
-        else if (key == "key_id" && action == "SUBMITTED_FOR_REVIEW") latest = value;
-    }
-    if (latest.empty()) throw std::runtime_error("No SUBMITTED_FOR_REVIEW history entry found.");
-    return latest;
 }
 
 bool technical_type(const std::string& type) {
@@ -186,6 +128,24 @@ std::vector<std::string> readiness_errors(
     }
     for (const auto& child : item.children) {
         if (!items.contains(child)) errors.push_back("missing child " + child);
+    }
+
+    if (item.type == "SRS" || item.type == "SEC") {
+        bool has_verification_test = false;
+        for (const auto& child_uid : item.children) {
+            const auto child = items.find(child_uid);
+            if (child == items.end()) continue;
+            const auto& type = child->second.type;
+            if (!(type == "TEST" || type == "UT" || type == "IT" ||
+                  type == "ST" || type == "AT")) continue;
+            has_verification_test = true;
+            if (child->second.test.status != "Passed") {
+                errors.push_back("verification test " + child_uid + " is not Passed");
+            }
+        }
+        if (!has_verification_test) {
+            errors.push_back("no linked verification test child");
+        }
     }
     return errors;
 }
@@ -257,8 +217,8 @@ int ReviewCommand::execute(
         throw std::runtime_error("Item must be In Review before approve or reject.");
     }
 
-    const auto author_key = first_author_key(item.file);
-    const auto submitter_key = latest_submitter_key(item.file);
+    const auto author_key = history.first_key_for_action(item.file, item.uid, "ITEM_CREATED");
+    const auto submitter_key = history.latest_key_for_action(item.file, item.uid, "SUBMITTED_FOR_REVIEW");
     if (identity.key_id == author_key || identity.key_id == submitter_key) {
         throw std::runtime_error(
             "FOUR-EYES VIOLATION: Author/submitter cannot approve or reject " + item.uid + ".");
@@ -286,3 +246,5 @@ int ReviewCommand::execute(
 }
 
 } // namespace capcom::commands
+
+

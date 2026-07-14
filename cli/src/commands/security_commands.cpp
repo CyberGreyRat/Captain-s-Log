@@ -10,3 +10,5 @@ int VerifyCommand::execute(const std::filesystem::path& project) const {
     return 0;
 }
 }
+
+

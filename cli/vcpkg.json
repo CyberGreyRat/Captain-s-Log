@@ -1,9 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-  "name": "capcom-cli",
-  "version-string": "0.3.0",
+  "name": "captains-log-cli",
+  "version-string": "0.8.0",
   "dependencies": [
     "curl",
     "nlohmann-json"
   ]
 }
+
+

@@ -89,6 +89,18 @@ namespace capcom::cli
         {
             result.type = CommandType::reject;
         }
+        else if (name == "migrate")
+        {
+            result.type = CommandType::migrate;
+        }
+        else if (
+            name == "test" &&
+            argc >= 3 &&
+            std::string_view{argv[2]} == "run")
+        {
+            result.type = CommandType::test_run;
+            first_argument = 3;
+        }
         else if (
             name == "test" &&
             argc >= 3 &&
@@ -108,7 +120,7 @@ namespace capcom::cli
 
     std::string_view CommandParser::help_text() noexcept
     {
-        return "Captain's Log CLI 0.7.0\n"
+        return "Captain's Log CLI 0.8.0\n"
                "YAML-First Requirements & Traceability\n"
                "\n"
                "VERWENDUNG\n"
@@ -123,13 +135,15 @@ namespace capcom::cli
                "  cap status                                Projektstatus anzeigen\n"
                "  cap scan                                  Implementierungen suchen\n"
                "  cap test import <Datei>                   Testergebnisse importieren\n"
+               "  cap test run <UID> -- <Programm>          Test ausfuehren und erfassen\n"
                "  cap validate                              Pflichtfelder und Links pruefen\n"
-               "  cap diff <UID>                            YAML-Aenderungen anzeigen\n"
+               "  cap diff [UID]                            YAML-Aenderungen anzeigen\n"
                "  cap sign <UID> -m <Grund>                 YAML-Aenderungen signieren\n"
                "  cap verify                                Audit-Signaturen pruefen\n"
                "  cap help                                  Hilfe anzeigen\n"
                "  cap version                               Version anzeigen\n"
                "  cap publish                               HTML-Report erzeugen\n"
+               "  cap migrate                               Projekt auf Schema v2 migrieren\n"
                "  cap review-check <UID>                   Review-Bereitschaft prüfen\n"
                "  cap review <UID> -m <Grund>              Zur Prüfung einreichen\n"
                "  cap approve <UID> -m <Ergebnis>          Anforderung freigeben\n"
@@ -238,3 +252,5 @@ namespace capcom::cli
     }
 
 } // namespace capcom::cli
+
+

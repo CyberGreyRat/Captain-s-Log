@@ -1,16 +1,5 @@
 #pragma once
 #include <filesystem>
+#include <optional>
 #include <string>
-namespace capcom::commands {
-class SignCommand final {
-public:
-    int execute(const std::filesystem::path& project,
-                const std::string& uid,
-                const std::string& reason) const;
-};
-class DiffCommand final {
-public:
-    int execute(const std::filesystem::path& project,
-                const std::string& uid) const;
-};
-}
+namespace capcom::commands {class SignCommand{public:int execute(const std::filesystem::path&,const std::string&,const std::string&)const;};class DiffCommand{public:int execute(const std::filesystem::path&,const std::optional<std::string>&)const;};}

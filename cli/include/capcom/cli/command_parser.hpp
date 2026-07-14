@@ -18,6 +18,7 @@ enum class CommandType {
     status,
     validate,
     test_import,
+    test_run,
     verify,
     sign,
     diff,
@@ -26,6 +27,7 @@ enum class CommandType {
     review_check,
     approve,
     reject,
+    migrate,
     unknown
 };
 
@@ -41,3 +43,5 @@ public:
 };
 
 } // namespace capcom::cli
+
+

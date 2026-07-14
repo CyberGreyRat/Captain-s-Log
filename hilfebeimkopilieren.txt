@@ -14,3 +14,8 @@ python -m pip install --no-cache-dir .\distribution
 
 cap version
 cap help
+
+
+
+woanders starten mit : 
+ C:\Users\luec-a\Documents\CapCom\.venv\Scripts\Activate.ps1

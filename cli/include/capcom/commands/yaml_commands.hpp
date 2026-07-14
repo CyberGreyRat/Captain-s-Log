@@ -1,8 +1,5 @@
 #pragma once
 #include <filesystem>
-namespace capcom::commands {
-class ScanCommand final{public:int execute(const std::filesystem::path&)const;};
-class StatusCommand final{public:int execute(const std::filesystem::path&)const;};
-class TestImportCommand final{public:int execute(const std::filesystem::path&,const std::filesystem::path&)const;};
-class ValidateCommand final{public:int execute(const std::filesystem::path&)const;};
-}
+#include <string>
+#include <vector>
+namespace capcom::commands {class ScanCommand{public:int execute(const std::filesystem::path&)const;};class StatusCommand{public:int execute(const std::filesystem::path&)const;};class TestImportCommand{public:int execute(const std::filesystem::path&,const std::filesystem::path&)const;};class TestRunCommand{public:int execute(const std::filesystem::path&,const std::string&,const std::vector<std::string>&)const;};class ValidateCommand{public:int execute(const std::filesystem::path&)const;};}

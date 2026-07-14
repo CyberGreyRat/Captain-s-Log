@@ -8,6 +8,7 @@
 #include "capcom/commands/yaml_commands.hpp"
 #include "capcom/commands/publish_command.hpp"
 #include "capcom/commands/review_command.hpp"
+#include "capcom/commands/migrate_command.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -241,7 +242,7 @@ int main(const int argc, const char *const argv[])
             return 0;
 
         case capcom::cli::CommandType::version:
-            std::cout << "Captain's Log CLI 0.7.0\n";
+            std::cout << "Captain's Log CLI 0.8.1\n";
             return 0;
 
         case capcom::cli::CommandType::init:
@@ -309,6 +310,14 @@ int main(const int argc, const char *const argv[])
                 std::filesystem::current_path(),
                 command.arguments.front());
 
+        case capcom::cli::CommandType::test_run:
+        {
+            if (command.arguments.size() < 3 || command.arguments[1] != "--")
+                throw std::runtime_error("Usage: cap test run <UID> -- <program> [args]");
+            std::vector<std::string> process(command.arguments.begin() + 2, command.arguments.end());
+            return capcom::commands::TestRunCommand{}.execute(
+                std::filesystem::current_path(), command.arguments[0], process);
+        }
         case capcom::cli::CommandType::verify:
             if (!command.arguments.empty())
             {
@@ -318,13 +327,11 @@ int main(const int argc, const char *const argv[])
                 std::filesystem::current_path());
 
         case capcom::cli::CommandType::diff:
-            if (command.arguments.size() != 1)
-            {
-                throw std::runtime_error("Usage: cap diff <uid>");
-            }
+            if (command.arguments.size() > 1)
+                throw std::runtime_error("Usage: cap diff [uid]");
             return capcom::commands::DiffCommand{}.execute(
                 std::filesystem::current_path(),
-                command.arguments.front());
+                command.arguments.empty() ? std::optional<std::string>{} : std::optional<std::string>{command.arguments.front()});
 
         case capcom::cli::CommandType::sign:
         {
@@ -341,6 +348,16 @@ int main(const int argc, const char *const argv[])
             }
             return capcom::commands::PublishCommand{}.execute(std::filesystem::current_path());
 
+        case capcom::cli::CommandType::approve:
+        {
+            const auto review = parse_review_arguments(command.arguments);
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(), review.uid,
+                capcom::commands::ReviewAction::approve, review.reason);
+        }
+        case capcom::cli::CommandType::migrate:
+            if (!command.arguments.empty()) throw std::runtime_error("Usage: cap migrate");
+            return capcom::commands::MigrateCommand{}.execute(std::filesystem::current_path());
         case capcom::cli::CommandType::unknown:
             throw std::runtime_error("Unknown command. Run 'cap help'.");
 
@@ -389,3 +406,5 @@ int main(const int argc, const char *const argv[])
 
     return 2;
 }
+
+

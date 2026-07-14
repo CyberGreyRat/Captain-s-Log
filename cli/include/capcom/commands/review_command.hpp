@@ -22,3 +22,5 @@ public:
 };
 
 } // namespace capcom::commands
+
+

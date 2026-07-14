@@ -28,20 +28,7 @@ struct AuditEntry {
     std::string key_id;
 };
 
-std::string trim(std::string value) {
-    const auto first = value.find_first_not_of(" \t\r\n");
-    if (first == std::string::npos) return {};
-    const auto last = value.find_last_not_of(" \t\r\n");
-    return value.substr(first, last - first + 1);
-}
 
-std::string unquote(std::string value) {
-    value = trim(std::move(value));
-    if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
-        value = value.substr(1, value.size() - 2);
-    }
-    return value;
-}
 
 std::string html_escape(const std::string& value) {
     std::string output;
@@ -59,56 +46,16 @@ std::string html_escape(const std::string& value) {
     return output;
 }
 
-std::vector<std::string> read_lines(const std::filesystem::path& file) {
-    std::ifstream input(file, std::ios::binary);
-    if (!input) throw std::runtime_error("Cannot read " + file.string());
-    std::vector<std::string> result;
-    std::string line;
-    while (std::getline(input, line)) {
-        if (!line.empty() && line.back() == '\r') line.pop_back();
-        result.push_back(line);
+std::vector<AuditEntry> read_history(const std::filesystem::path& file) {
+    const auto uid = capcom::yaml::normalize_uid(file.stem().string());
+    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    const auto central = capcom::audit::HistoryService{identity}.entries(file, uid);
+    std::vector<AuditEntry> result;
+    for (const auto& entry : central) {
+        result.push_back({entry.timestamp, entry.action, entry.actor, entry.reason, entry.key_id});
     }
     return result;
 }
-
-std::vector<AuditEntry> read_history(const std::filesystem::path& file) {
-    const auto lines = read_lines(file);
-    std::vector<AuditEntry> entries;
-    AuditEntry current{};
-    bool in_history = false;
-
-    auto finish = [&]() {
-        if (!current.timestamp.empty()) entries.push_back(current);
-        current = {};
-    };
-
-    for (const auto& line : lines) {
-        if (line.rfind("history:", 0) == 0) {
-            in_history = true;
-            continue;
-        }
-        if (!in_history) continue;
-        if (!line.empty() && line.front() != ' ' && line.front() != '\t') break;
-
-        auto normalized = trim(line);
-        if (normalized.rfind("- ", 0) == 0) normalized = trim(normalized.substr(2));
-        const auto colon = normalized.find(':');
-        if (colon == std::string::npos) continue;
-        const auto key = trim(normalized.substr(0, colon));
-        const auto value = unquote(normalized.substr(colon + 1));
-
-        if (key == "timestamp") {
-            finish();
-            current.timestamp = value;
-        } else if (key == "action") current.action = value;
-        else if (key == "actor") current.actor = value;
-        else if (key == "reason") current.reason = value;
-        else if (key == "key_id") current.key_id = value;
-    }
-    finish();
-    return entries;
-}
-
 std::string generated_at_utc() {
     const auto time = std::chrono::system_clock::to_time_t(
         std::chrono::system_clock::now());
@@ -318,3 +265,5 @@ int PublishCommand::execute(const std::filesystem::path& project) const {
 }
 
 } // namespace capcom::commands
+
+

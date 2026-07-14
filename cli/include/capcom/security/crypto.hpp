@@ -11,3 +11,5 @@ namespace capcom::security {
     const std::string& signature_base64);
 [[nodiscard]] std::string random_hex(std::size_t bytes);
 }
+
+

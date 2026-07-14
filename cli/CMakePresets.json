@@ -4,7 +4,7 @@
   "configurePresets": [
     {
       "name": "default",
-      "displayName": "CapCom CLI - Debug (TDM-GCC)",
+      "displayName": "Captain's Log CLI - Debug (TDM-GCC)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
@@ -16,7 +16,7 @@
     },
     {
       "name": "release",
-      "displayName": "CapCom CLI - Release (TDM-GCC)",
+      "displayName": "Captain's Log CLI - Release (TDM-GCC)",
       "inherits": "default",
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "CAPCOM_BUILD_TESTS": "OFF" }
@@ -27,3 +27,5 @@
     { "name": "release", "configurePreset": "release" }
   ]
 }
+
+
