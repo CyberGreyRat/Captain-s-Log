@@ -37,6 +37,8 @@ add_library(
         src/security/crypto.cpp
         src/audit/history_service.cpp
         src/commands/publish_command.cpp
+        src/commands/review_command.cpp
+
 )
 
 add_library(

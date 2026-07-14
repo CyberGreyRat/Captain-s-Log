@@ -7,6 +7,7 @@
 #include "capcom/commands/tree_command.hpp"
 #include "capcom/commands/yaml_commands.hpp"
 #include "capcom/commands/publish_command.hpp"
+#include "capcom/commands/review_command.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -98,6 +99,30 @@ namespace
         }
 
         return {arguments[0], arguments[2]};
+    }
+
+    struct ReviewArguments
+    {
+        std::string uid;
+        std::string reason;
+    };
+
+    ReviewArguments parse_review_arguments(
+        const std::vector<std::string> &arguments)
+    {
+        if (
+            arguments.size() != 3 ||
+            (arguments[1] != "-m" &&
+             arguments[1] != "--message"))
+        {
+            throw std::runtime_error(
+                "Usage: cap review|approve|reject "
+                "<uid> -m \"reason\"");
+        }
+
+        return {
+            arguments[0],
+            arguments[2]};
     }
 
 #ifdef _WIN32
@@ -318,6 +343,42 @@ int main(const int argc, const char *const argv[])
 
         case capcom::cli::CommandType::unknown:
             throw std::runtime_error("Unknown command. Run 'cap help'.");
+
+        case capcom::cli::CommandType::review_check:
+            if (command.arguments.size() != 1)
+            {
+                throw std::runtime_error(
+                    "Usage: cap review-check <uid>");
+            }
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                command.arguments[0],
+                capcom::commands::ReviewAction::check);
+
+        case capcom::cli::CommandType::review:
+        {
+            const auto review =
+                parse_review_arguments(command.arguments);
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                review.uid,
+                capcom::commands::ReviewAction::submit,
+                review.reason);
+        }
+
+        case capcom::cli::CommandType::reject:
+        {
+            const auto review =
+                parse_review_arguments(command.arguments);
+
+            return capcom::commands::ReviewCommand{}.execute(
+                std::filesystem::current_path(),
+                review.uid,
+                capcom::commands::ReviewAction::reject,
+                review.reason);
+        }
         }
     }
     catch (const std::exception &error)

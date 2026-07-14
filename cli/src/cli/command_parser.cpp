@@ -73,6 +73,22 @@ namespace capcom::cli
         {
             result.type = CommandType::publish;
         }
+        else if (name == "review")
+        {
+            result.type = CommandType::review;
+        }
+        else if (name == "review-check")
+        {
+            result.type = CommandType::review_check;
+        }
+        else if (name == "approve")
+        {
+            result.type = CommandType::approve;
+        }
+        else if (name == "reject")
+        {
+            result.type = CommandType::reject;
+        }
         else if (
             name == "test" &&
             argc >= 3 &&
@@ -114,6 +130,10 @@ namespace capcom::cli
                "  cap help                                  Hilfe anzeigen\n"
                "  cap version                               Version anzeigen\n"
                "  cap publish                               HTML-Report erzeugen\n"
+               "  cap review-check <UID>                   Review-Bereitschaft prüfen\n"
+               "  cap review <UID> -m <Grund>              Zur Prüfung einreichen\n"
+               "  cap approve <UID> -m <Ergebnis>          Anforderung freigeben\n"
+               "  cap reject <UID> -m <Grund>              Anforderung ablehnen\n"
                "\n"
                "KURZBEFEHLE\n"
                "  -i init   -c create   -l link   -u unlink   -t tree\n"

@@ -22,6 +22,10 @@ enum class CommandType {
     sign,
     diff,
     publish,
+    review,
+    review_check,
+    approve,
+    reject,
     unknown
 };
 
