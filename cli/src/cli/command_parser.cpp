@@ -108,7 +108,7 @@ namespace capcom::cli
 
     std::string_view CommandParser::help_text() noexcept
     {
-        return "Captain's Log CLI 0.6.0\n"
+        return "Captain's Log CLI 0.7.0\n"
                "YAML-First Requirements & Traceability\n"
                "\n"
                "VERWENDUNG\n"

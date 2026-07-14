@@ -1,0 +1,16 @@
+cd C:\Users\luec-a\Documents\CapCom
+
+Copy-Item .\cli\build\debug\cap.exe .\distribution\src\capcom\bin\cap.exe -Force
+
+python -m pip uninstall captains-log-cli -y
+
+Remove-Item .\distribution\build -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item .\distribution\dist -Recurse -Force -ErrorAction SilentlyContinue
+
+Get-ChildItem .\distribution\src -Filter "*.egg-info" |
+    Remove-Item -Recurse -Force
+
+python -m pip install --no-cache-dir .\distribution
+
+cap version
+cap help

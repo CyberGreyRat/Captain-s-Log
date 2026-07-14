@@ -241,7 +241,7 @@ int main(const int argc, const char *const argv[])
             return 0;
 
         case capcom::cli::CommandType::version:
-            std::cout << "Captain's Log CLI 0.6.0\n";
+            std::cout << "Captain's Log CLI 0.7.0\n";
             return 0;
 
         case capcom::cli::CommandType::init:
