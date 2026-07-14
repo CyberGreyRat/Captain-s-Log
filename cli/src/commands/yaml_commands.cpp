@@ -143,6 +143,14 @@ namespace capcom::commands
             if (before_hash[uid] != history.current_content_hash(item.file))
                 history.append(item.file, uid, "IMPLEMENTATION_SCANNED", "Source markers scanned at Git " + hash);
         std::cout << "Scan complete: " << found.size() << " item(s) implemented. Git " << hash << '\n';
+        for (const auto &[uid, implementations] : found)
+        {
+            std::cout << "  " << uid << '\n';
+            for (const auto &implementation : implementations)
+            {
+                std::cout << "    " << implementation.file << ':' << implementation.start_line << '-' << implementation.end_line << '\n';
+            }
+        }
         return 0;
     }
     int StatusCommand::execute(const std::filesystem::path &p) const
