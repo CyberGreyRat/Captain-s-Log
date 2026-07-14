@@ -3,17 +3,17 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "capcom-cli"
-version = "0.5.0"
-description = "CapCom local requirements and traceability CLI"
+name = "captains-log-cli"
+version = "0.6.0"
+description = "Captain's Log YAML-First Requirements and Traceability CLI"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    { name = "CapCom Team" }
+    { name = "Captain's Log Team" }
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Operating System :: Microsoft :: Windows",
+    "Operating System :: Microsoft :: Windows"
 ]
 
 [project.scripts]

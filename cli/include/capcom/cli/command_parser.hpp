@@ -4,40 +4,35 @@
 #include <string_view>
 #include <vector>
 
-namespace capcom::cli
-{
+namespace capcom::cli {
 
-    enum class CommandType
-    {
-        help,
-        version,
-        init,
-        create,
-        link,
-        unlink,
-        tree,
-        scan,
-        status,
-        validate,
-        test_import,
-        verify,
-        unknown
-    };
+enum class CommandType {
+    help,
+    version,
+    init,
+    create,
+    link,
+    unlink,
+    tree,
+    scan,
+    status,
+    validate,
+    test_import,
+    verify,
+    sign,
+    diff,
+    unknown
+};
 
-    struct Command
-    {
-        CommandType type{CommandType::unknown};
-        std::vector<std::string> arguments;
-    };
+struct Command {
+    CommandType type{CommandType::unknown};
+    std::vector<std::string> arguments;
+};
 
-    class CommandParser final
-    {
-    public:
-        [[nodiscard]] Command parse(
-            int argc,
-            const char *const argv[]) const;
-
-        [[nodiscard]] static std::string_view help_text() noexcept;
-    };
+class CommandParser final {
+public:
+    [[nodiscard]] Command parse(int argc, const char* const argv[]) const;
+    [[nodiscard]] static std::string_view help_text() noexcept;
+};
 
 } // namespace capcom::cli
