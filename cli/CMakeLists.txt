@@ -36,6 +36,7 @@ add_library(
         src/identity/identity_manager_windows.cpp
         src/security/crypto.cpp
         src/audit/history_service.cpp
+        src/commands/publish_command.cpp
 )
 
 add_library(

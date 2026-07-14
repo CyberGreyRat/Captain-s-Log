@@ -1,1 +1,0 @@
-"""CapCom local FastAPI backend."""

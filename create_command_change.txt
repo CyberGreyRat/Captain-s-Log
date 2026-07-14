@@ -1,3 +1,0 @@
-In src/commands/create_command.cpp, add these two lines after attributes: {} in the generated YAML:
-parents: []
-children: []

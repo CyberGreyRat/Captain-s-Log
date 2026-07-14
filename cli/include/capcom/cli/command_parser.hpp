@@ -21,6 +21,7 @@ enum class CommandType {
     verify,
     sign,
     diff,
+    publish,
     unknown
 };
 
