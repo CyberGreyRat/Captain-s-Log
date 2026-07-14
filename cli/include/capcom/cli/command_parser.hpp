@@ -20,6 +20,7 @@ namespace capcom::cli
         status,
         validate,
         test_import,
+        verify,
         unknown
     };
 

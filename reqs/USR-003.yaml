@@ -1,0 +1,27 @@
+uid: USR-003
+type: USR
+status: Draft
+title: "Sicherheitstest Captain's Log"
+text: ""
+rationale: ""
+version: "0.1.0"
+git_hash: null
+attributes: {}
+parents: []
+children: []
+history:
+  - timestamp: "2026-07-14T06:50:04Mitteleuropäische Sommerzeit"
+    action: "ITEM_CREATED"
+    actor: "Luke Eckardt"
+    host_id: "HOST-d2db7831f732feddf8bc"
+    key_id: "KEY-46e2795ad981866087f6"
+    algorithm: "RSA-PSS-SHA256"
+    public_key: "UlNBMQAIAAADAAAAAAEAAAAAAAAAAAAAAQABxOdP4VWvZS5FFppkXzL3VM5BS6qtTJigKgHTWqkfepZBVkHoOM/D0T2B5KXS0j1/gLloe4PgH0bb1cvGEmTyQHEPIRHfVkjC0DVESiBH/7QWfNMGXJQrByKt5WM5uOsDdkbHPPvkcYiqzeIHaWn8+B1aTNHyGdYD5x/WaQwX2wofW+JcqzrcMtfN4rwK9Hinq7WpP2ShaMJBYjGCPcbcYbOAtEbCUlKpThlt10KIwtwZZzfkdnhkpf+JwlgT6uD7mrktAQHDxr3ZMyOhv/UUnLEgMEAA3d1FSKWSlu1r6w59CFx2eUYAF6Twf5l4AjjpIXZqpBghhgfXMVNDL/wOdQ=="
+    content_hash: "cce1304522713df2f2ee60958f07fc7fb4510b738849b312af0410a792db9eb7"
+    previous_signature: "GENESIS"
+    signature: "FpqvKti84afC5hsHNbJaxWL1u5fdfcjkQ33BMRDtr8Za7XzsZ2O/2L1hTxLWkqC7JmyljkT/Xxzv6FsJrlqGzFynOFQHD4a9/7We+DtQQ/hxakojXjf/Z86drI9fI1Gp/v624AO9LE+I524LXUDgvz1T9u9O4mKqk60Li1yL9ox+FvRefU+h3xi/FVIvqm8WDAqbsCVEhk/97oDn29oVjB+d0r4FYmBytzhaD805svRiJz0DRrgh+dBKgoxNWOcbiIic8cd4ucvo6aXvPsX1Ab95xHyzh14dQv8Yaywu4KoqwdC9trRHDwS+M0a588lz7tR0OYWBgF5KJ8jacKe70Q=="
+integration_template: |
+  /* @cap-start: USR-003
+   * @cap-desc: Sicherheitstest Captain's Log
+   */
+  /* @cap-end: USR-003 */

@@ -1,0 +1,27 @@
+uid: USR-004
+type: USR
+status: Draft
+title: "Signaturtest"
+text: ""
+rationale: ""
+version: "0.1.0"
+git_hash: null
+attributes: {}
+parents: []
+children: []
+history:
+  - timestamp: "2026-07-14T06:54:56Mitteleuropäische Sommerzeit"
+    action: "ITEM_CREATED"
+    actor: "Luke Eckardt"
+    host_id: "HOST-d2db7831f732feddf8bc"
+    key_id: "KEY-46e2795ad981866087f6"
+    algorithm: "RSA-PSS-SHA256"
+    public_key: "UlNBMQAIAAADAAAAAAEAAAAAAAAAAAAAAQABxOdP4VWvZS5FFppkXzL3VM5BS6qtTJigKgHTWqkfepZBVkHoOM/D0T2B5KXS0j1/gLloe4PgH0bb1cvGEmTyQHEPIRHfVkjC0DVESiBH/7QWfNMGXJQrByKt5WM5uOsDdkbHPPvkcYiqzeIHaWn8+B1aTNHyGdYD5x/WaQwX2wofW+JcqzrcMtfN4rwK9Hinq7WpP2ShaMJBYjGCPcbcYbOAtEbCUlKpThlt10KIwtwZZzfkdnhkpf+JwlgT6uD7mrktAQHDxr3ZMyOhv/UUnLEgMEAA3d1FSKWSlu1r6w59CFx2eUYAF6Twf5l4AjjpIXZqpBghhgfXMVNDL/wOdQ=="
+    content_hash: "d8b3c9c85aedf2a1ae4f6c5bfef412ac58b32f66f8b4e8245cb93f12389ee7f3"
+    previous_signature: "GENESIS"
+    signature: "Y1t/Rnq1dqT+svAQraGD0ygNcgHH23q5wp8o8O+or2QTWNShCRi/1SaPfUi7FR6jzZiqySIJqdWoCAmSnW3e0V/CVvXG0eZkluJZO0IwnFapJKeQqAynF6xWXpxRMPjYLsv27i5GT1v+jkV16JLBb1uygV+SNwHuw68w0oT5Ze89NolF/Hy1vARNEvoFczWOFRMejX/CSKSAVRTm7P2vomxhiqbYbldz03cdDkD9+BnFfVGtAqlbJJj5G66lVnXjU8KEfJ2gRiVLPgQ3i5ZMPy0p0+IM18V+Al8ZUJGEg9BdEK4/oSetlUH61gj6KG4yDVGpvEVsWZh/Mwwn5QPW0Q=="
+integration_template: |
+  /* @cap-start: USR-004
+   * @cap-desc: Signaturtest
+   */
+  /* @cap-end: USR-004 */

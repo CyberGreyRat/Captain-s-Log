@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CapComCLI VERSION 0.3.1 DESCRIPTION "Local CapCom command-line client" LANGUAGES CXX)
+project(CapComCLI VERSION 0.5.0 DESCRIPTION "Local CapCom command-line client" LANGUAGES CXX)
 option(CAPCOM_BUILD_TESTS "Build CapCom CLI tests" ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,12 +12,26 @@ add_library(capcom_cli_core STATIC
     src/commands/create_command.cpp
     src/commands/link_command.cpp
     src/commands/tree_command.cpp
+    src/commands/yaml_commands.cpp
+    src/commands/security_commands.cpp
     src/requirements/requirement_store.cpp
+    src/yaml/yaml_store.cpp
     src/config/app_config.cpp
     src/http/http_client.cpp
-    src/yaml/yaml_store.cpp    
-    src/commands/yaml_commands.cpp
+    src/identity/identity_manager_windows.cpp
+    src/security/crypto.cpp
+    src/audit/history_service.cpp
 )
+
+if(WIN32)
+    target_link_libraries(
+        capcom_cli_core
+        PRIVATE
+            ncrypt
+            bcrypt
+            crypt32
+    )
+endif()
 
 add_library(CapCom::CliCore ALIAS capcom_cli_core)
 target_include_directories(capcom_cli_core PUBLIC

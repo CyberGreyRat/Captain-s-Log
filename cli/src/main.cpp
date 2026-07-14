@@ -4,6 +4,8 @@
 #include "capcom/commands/link_command.hpp"
 #include "capcom/commands/tree_command.hpp"
 #include "capcom/commands/yaml_commands.hpp"
+#include "capcom/commands/security_commands.hpp"
+#include "capcom/identity/identity_manager.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -88,7 +90,7 @@ int main(const int argc, const char *const argv[])
             return 0;
 
         case capcom::cli::CommandType::version:
-            std::cout << "CapCom CLI 0.3.3\n";
+            std::cout << "Captain's Log CLI 0.5.0\n";
             return 0;
 
         case capcom::cli::CommandType::init:
@@ -159,6 +161,10 @@ int main(const int argc, const char *const argv[])
 
         case capcom::cli::CommandType::unknown:
             throw std::runtime_error("Unknown command. Run 'cap help'.");
+
+        case capcom::cli::CommandType::verify:
+            return capcom::commands::VerifyCommand{}.execute(
+                std::filesystem::current_path());
         }
     }
     catch (const std::exception &error)
