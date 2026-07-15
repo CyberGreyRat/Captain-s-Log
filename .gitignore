@@ -1,3 +1,17 @@
 backend/db/traceability.db-wal
 backend/db/traceability.db-shm
 reports/
+
+# Captain Web build products
+captain-web/build/
+captain-web/build-output.txt
+captain-web/vcpkg_installed/
+
+# Runtime databases and document storage
+*.db
+*.db-shm
+*.db-wal
+.captain/documents/
+
+# Python development environment
+.venv/
