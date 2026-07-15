@@ -7,12 +7,21 @@
 namespace captain::api {
 class ApiServer final {
 public:
-    ApiServer(repository::HybridRepository&,sync::SyncService&,
-              std::filesystem::path project,std::filesystem::path web,
-              std::filesystem::path cap_executable);
+    ApiServer(
+        repository::HybridRepository& repository,
+        sync::SyncService& sync,
+        std::filesystem::path project,
+        std::filesystem::path web,
+        std::filesystem::path cap_executable);
     void routes();
-    void listen(const std::string&,int);
+    void listen(const std::string& host, int port);
 private:
+    std::string user() const;
+    std::string host() const;
+    void audit(
+        const std::string& action,
+        const std::string& object_uid,
+        const std::string& detail) const;
     repository::HybridRepository& repository_;
     sync::SyncService& sync_;
     std::filesystem::path project_;
