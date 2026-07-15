@@ -1,13 +1,11 @@
-# Captain Web v0.7 Complete
+# Captain Web v0.8 Repair
 
-- direct browser session: Viewer, read-only;
-- `cap gui`: one-time ticket and one-hour HttpOnly Developer session;
-- all POST routes are protected server-side;
-- central project catalog at `%USERPROFILE%\.captain\captain-central.db`;
-- Push registers/upserts the active project and requirement snapshots;
-- header project dropdown shows all registered projects;
-- current `cap gui` project is editable, other projects are read-only snapshots;
-- PowerShell profile wrapper makes `cap gui` available while forwarding all other commands to the existing `cap.exe`.
+This repair handles the observed mixed source state:
 
-After applying, rebuild, close PowerShell, open a new PowerShell, activate the venv,
-change into any initialized Captain project and run `cap gui`.
+- v0.7 header/main with AuthService and ProjectCatalog;
+- older five-argument ApiServer constructor in api_server.cpp;
+- dynamic form attributes not yet applied;
+- local YAML attributes parser/writer still incomplete.
+
+It repairs the constructor, applies dynamic CLASS/RISK/SRS/SEC/test forms, and
+installs the YAML attributes parser/writer. Then rebuild Captain Web.

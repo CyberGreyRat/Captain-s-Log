@@ -13,12 +13,12 @@ public:
     void routes();
     void listen(const std::string&,int);
 private:
-    std::optional<auth::Session> developer(const httplib::Request&)const;
-    bool require_developer(const httplib::Request&,httplib::Response&)const;
-    std::string actor(const httplib::Request&)const;
-    std::string actor_host(const httplib::Request&)const;
-    void audit(const std::string&,const std::string&,const std::string&,const std::string&,const std::string&)const;
-    repository::HybridRepository&repository_;sync::SyncService&sync_;project::ProjectCatalog&catalog_;auth::AuthService&auth_;
+    [[nodiscard]] std::string user() const;
+    [[nodiscard]] std::string host() const;
+    [[nodiscard]] std::optional<auth::Session> developer(const httplib::Request&) const;
+    bool require_developer(const httplib::Request&,httplib::Response&) const;
+    void audit(const std::string&,const std::string&,const std::string&) const;
+    repository::HybridRepository& repository_;sync::SyncService& sync_;project::ProjectCatalog& catalog_;auth::AuthService& auth_;
     std::string project_id_,project_name_;std::filesystem::path project_,web_;CliBridge cli_;httplib::Server server_;
 };
 }

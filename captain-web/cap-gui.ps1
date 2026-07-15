@@ -7,9 +7,22 @@ $server = Join-Path $root "build\debug\captain-web.exe"
 $web = Join-Path $root "web"
 $cap = "C:\Users\luec-a\Documents\CapCom\.venv\Scripts\cap.exe"
 $bytes = New-Object byte[] 32
-[Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$ticket = [Convert]::ToHexString($bytes)
-$process = Start-Process $server -ArgumentList @($project,$web,$cap,$ticket,$Port) -PassThru
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+    $rng.GetBytes($bytes)
+}
+finally {
+    $rng.Dispose()
+}
+$ticket = ([System.BitConverter]::ToString($bytes)).Replace("-", "")
+$process = $arguments = @(
+    ('"' + $project + '"'),
+    ('"' + $web + '"'),
+    ('"' + $cap + '"'),
+    ('"' + $ticket + '"'),
+    ([string]$Port)
+)
+$process = Start-Process $server -ArgumentList $arguments -PassThru
 Start-Sleep -Milliseconds 700
 Start-Process "http://127.0.0.1:$Port/auth/cap-gui?ticket=$ticket"
 Write-Host "Captain's Log Developer-Sitzung gestartet: $project"

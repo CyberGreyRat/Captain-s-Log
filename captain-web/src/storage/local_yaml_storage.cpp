@@ -17,8 +17,43 @@ std::string now(){auto t=std::chrono::system_clock::to_time_t(std::chrono::syste
 #endif
  std::ostringstream o;o<<std::put_time(&x,"%Y-%m-%dT%H:%M:%SZ");return o.str();}
 std::vector<std::string>list(const std::string&s){auto a=s.find('['),b=s.rfind(']');std::vector<std::string>v;if(a==std::string::npos||b<=a)return v;std::stringstream in{s.substr(a+1,b-a-1)};std::string x;while(std::getline(in,x,',')){x=upper(unquote(x));if(!x.empty())v.push_back(x);}return v;}std::string show(const std::vector<std::string>&v){std::ostringstream o;o<<'[';for(std::size_t i=0;i<v.size();++i){if(i)o<<", ";o<<v[i];}o<<']';return o.str();}
-void attrs(std::ostream&o,const domain::Requirement&r){o<<"attributes:\n";if(r.type=="SRS"||r.type=="SEC")o<<"  classification_ref: \"\"\n  software_item_safety_class: \"\"\n  classification_responsible: \"\"\n  classification_rationale: \"\"\n  risk_references: []\n";else if(r.type=="UT"||r.type=="IT"||r.type=="ST"||r.type=="AT"||r.type=="TEST")o<<"  verifies: []\n  test_method: \"\"\n  expected_result: \"\"\n  test_responsible: \"\"\n";else o<<"  owner: \"\"\n";}
-domain::Requirement parse(const std::filesystem::path&p){domain::Requirement r;std::ifstream in(p);std::string line;while(std::getline(in,line)){auto c=line.find(':');if(c==std::string::npos)continue;auto k=trim(line.substr(0,c)),v=unquote(line.substr(c+1));bool top=!line.empty()&&line.front()!=' '&&line.front()!='\t';if(top&&k=="uid")r.uid=upper(v);else if(top&&k=="type")r.type=upper(v);else if(top&&k=="status")r.status=v;else if(top&&k=="title")r.title=v;else if(top&&k=="text")r.text=v;else if(top&&k=="rationale")r.rationale=v;else if(top&&k=="parents")r.parents=list(line);else if(top&&k=="children")r.children=list(line);else if(top&&k=="authority")r.authority=v=="remote"?domain::Authority::remote:domain::Authority::local;else if(top&&k=="read_only")r.read_only=v=="true";else if(top&&k=="created_by")r.created_by=v;else if(top&&k=="created_host")r.created_host=v;else if(top&&k=="created_at")r.created_at=v;else if(top&&k=="created_source")r.created_source=v;else if(top&&k=="sync_state")r.sync_state=v;else if(top&&k=="synced_at")r.synced_at=v;else if(top&&k=="synced_by")r.synced_by=v;else if(top&&k=="synced_revision")r.synced_revision=v;}return r;}
+std::map<std::string,std::string> default_attributes(const std::string&type){
+    if(type=="CLASS")return{{"software_system",""},{"software_safety_class",""},{"classification_responsible",""},{"classification_rationale",""},{"risk_management_document",""},{"risk_management_record_ids","[]"}};
+    if(type=="RISK")return{{"hazard",""},{"hazardous_situation",""},{"harm",""},{"risk_responsible",""},{"initial_severity",""},{"initial_probability",""},{"control_requirements","[]"},{"verification_tests","[]"}};
+    if(type=="SRS"||type=="SEC")return{{"classification_ref",""},{"software_item_safety_class",""},{"classification_responsible",""},{"classification_rationale",""},{"risk_references","[]"}};
+    if(type=="UT"||type=="IT"||type=="ST"||type=="AT"||type=="TEST")return{{"verifies","[]"},{"test_method",""},{"expected_result",""},{"test_responsible",""}};
+    return{{"owner",""}};
+}
+std::string yaml_attribute_value(const std::string&value){
+    const auto cleaned=trim(value);
+    if(cleaned.size()>=2&&cleaned.front()=='['&&cleaned.back()==']')return cleaned;
+    if(cleaned=="true"||cleaned=="false"||cleaned=="null")return cleaned;
+    return quote(value);
+}
+void attrs(std::ostream&o,const domain::Requirement&r){
+    o<<"attributes:\n";
+    auto values=default_attributes(r.type);
+    for(const auto&[key,value]:r.attributes)values[key]=value;
+    for(const auto&[key,value]:values)o<<"  "<<key<<": "<<yaml_attribute_value(value)<<"\n";
+}
+domain::Requirement parse(const std::filesystem::path&p){
+    domain::Requirement r;std::ifstream in(p);std::string line;bool in_attributes=false;
+    while(std::getline(in,line)){
+        const auto indentation=line.find_first_not_of(" \t");
+        const bool top=indentation==0;
+        auto c=line.find(':');if(c==std::string::npos)continue;
+        auto k=trim(line.substr(0,c)),v=unquote(line.substr(c+1));
+        if(top)in_attributes=(k=="attributes");
+        if(in_attributes&&!top){
+            const auto raw=trim(line.substr(c+1));
+            r.attributes[k]=(raw.size()>=2&&raw.front()=='['&&raw.back()==']')?raw:unquote(raw);
+            continue;
+        }
+        if(top&&k=="uid")r.uid=upper(v);else if(top&&k=="type")r.type=upper(v);else if(top&&k=="status")r.status=v;else if(top&&k=="title")r.title=v;else if(top&&k=="text")r.text=v;else if(top&&k=="rationale")r.rationale=v;else if(top&&k=="parents")r.parents=list(line);else if(top&&k=="children")r.children=list(line);else if(top&&k=="authority")r.authority=v=="remote"?domain::Authority::remote:domain::Authority::local;else if(top&&k=="read_only")r.read_only=v=="true";else if(top&&k=="created_by")r.created_by=v;else if(top&&k=="created_host")r.created_host=v;else if(top&&k=="created_at")r.created_at=v;else if(top&&k=="created_source")r.created_source=v;else if(top&&k=="sync_state")r.sync_state=v;else if(top&&k=="synced_at")r.synced_at=v;else if(top&&k=="synced_by")r.synced_by=v;else if(top&&k=="synced_revision")r.synced_revision=v;
+    }
+    for(const auto&[key,value]:default_attributes(r.type))if(!r.attributes.contains(key))r.attributes[key]=value;
+    return r;
+}
 void write(const std::filesystem::path&p,const domain::Requirement&r){std::filesystem::create_directories(p.parent_path());auto t=p;t+=".tmp";std::ofstream o(t,std::ios::binary|std::ios::trunc);if(!o)throw std::runtime_error("Cannot write "+t.string());o<<"uid: "<<r.uid<<"\ntype: "<<r.type<<"\nstatus: "<<r.status<<"\ntitle: "<<quote(r.title)<<"\ntext: "<<quote(r.text)<<"\nrationale: "<<quote(r.rationale)<<"\nversion: \"0.1.0\"\ngit_hash: null\nauthority: "<<domain::authority_name(r.authority)<<"\nread_only: "<<(r.read_only?"true":"false")<<"\ncreated_by: "<<quote(r.created_by)<<"\ncreated_host: "<<quote(r.created_host)<<"\ncreated_at: "<<quote(r.created_at)<<"\ncreated_source: "<<quote(r.created_source)<<"\nsync_state: "<<r.sync_state<<"\nsynced_at: "<<quote(r.synced_at)<<"\nsynced_by: "<<quote(r.synced_by)<<"\nsynced_revision: "<<quote(r.synced_revision)<<"\n";attrs(o,r);o<<"parents: "<<show(r.parents)<<"\nchildren: "<<show(r.children)<<"\nimplementation: []\nintegration_template: |\n  /* @cap-start: "<<r.uid<<"\n   * @cap-desc: "<<r.title<<"\n   */\n  /* @cap-end: "<<r.uid<<" */\n";o.close();std::error_code e;std::filesystem::remove(p,e);e.clear();std::filesystem::rename(t,p,e);if(e)throw std::runtime_error("Cannot replace "+p.string());}
 std::filesystem::path locate(const std::filesystem::path&root,const domain::Requirement&r){auto d=root/"reqs"/lower(r.type),a=d/(r.uid+".yaml"),b=d/(r.uid+".yml");return std::filesystem::exists(a)?a:(std::filesystem::exists(b)?b:a);}
 }
@@ -27,3 +62,4 @@ std::vector<domain::Requirement>LocalYamlStorage::all()const{std::vector<domain:
 domain::Requirement LocalYamlStorage::create(const domain::CreateRequirement&q){auto type=upper(q.type);auto dir=project_/"reqs"/lower(type);std::filesystem::create_directories(dir);int n=0;std::regex re{"^"+type+R"(-(\d+)\.(yaml|yml)$)"};for(const auto&e:std::filesystem::directory_iterator(dir)){std::smatch m;auto f=e.path().filename().string();if(std::regex_match(f,m,re))n=std::max(n,std::stoi(m[1].str()));}std::ostringstream id;id<<type<<'-'<<std::setw(3)<<std::setfill('0')<<n+1;domain::Requirement r;r.uid=id.str();r.type=type;r.title=q.title;r.text=q.text;r.rationale=q.rationale;r.parents=q.parents;r.children=q.children;r.created_by=q.actor;r.created_host=q.host;r.created_source=q.source;r.created_at=now();r.updated_by=q.actor;r.sync_state="local_only";write(dir/(r.uid+".yaml"),r);return r;}
 void LocalYamlStorage::update(const domain::Requirement&r){if(r.read_only)throw std::runtime_error("Remote mirror is read-only: "+r.uid);write(locate(project_,r),r);}void LocalYamlStorage::write_mirror(const domain::Requirement&r){auto x=r;x.authority=domain::Authority::remote;x.read_only=true;x.sync_state="remote";write(project_/"reqs"/"remote"/lower(x.type)/(x.uid+".yaml"),x);}
 }
+
