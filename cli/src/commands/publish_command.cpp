@@ -4,7 +4,6 @@
 #include "capcom/identity/identity_manager.hpp"
 #include "capcom/yaml/yaml_store.hpp"
 
-#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -22,34 +21,37 @@ namespace {
 
 using Items = std::map<std::string, capcom::yaml::Item>;
 
-bool test_type(const std::string& type) {
+bool is_test_type(const std::string& type) {
     return type == "TEST" || type == "UT" || type == "IT" ||
            type == "ST" || type == "AT";
 }
 
-bool base_complete(const capcom::yaml::Item& item) {
+bool is_base_complete(const capcom::yaml::Item& item) {
     if (item.uid.empty() || item.title.empty() || item.text.empty() ||
         item.rationale.empty()) {
         return false;
     }
+
     if ((item.type == "SRS" || item.type == "SEC") &&
         item.implementations.empty()) {
         return false;
     }
-    if (test_type(item.type) &&
+
+    if (is_test_type(item.type) &&
         (item.implementations.empty() || item.test.status != "Passed")) {
         return false;
     }
+
     return true;
 }
 
-bool chain_complete(
+bool is_chain_complete(
     const std::string& uid,
     const Items& items,
     std::set<std::string> path) {
     const auto found = items.find(uid);
     if (found == items.end() || !path.insert(uid).second ||
-        !base_complete(found->second)) {
+        !is_base_complete(found->second)) {
         return false;
     }
 
@@ -59,18 +61,21 @@ bool chain_complete(
         if (item.children.empty()) {
             return false;
         }
-        for (const auto& child : item.children) {
-            if (!chain_complete(child, items, path)) {
+
+        for (const auto& child_uid : item.children) {
+            if (!is_chain_complete(child_uid, items, path)) {
                 return false;
             }
         }
     }
+
     return true;
 }
 
-std::string escape(const std::string& value) {
+std::string html_escape(const std::string& value) {
     std::string output;
     output.reserve(value.size());
+
     for (const char character : value) {
         switch (character) {
         case '&': output += "&amp;"; break;
@@ -81,157 +86,231 @@ std::string escape(const std::string& value) {
         default: output.push_back(character); break;
         }
     }
+
     return output;
 }
 
-std::string generated_at() {
+std::string generated_at_utc() {
     const auto time = std::chrono::system_clock::to_time_t(
         std::chrono::system_clock::now());
     std::tm utc{};
+
 #ifdef _WIN32
     gmtime_s(&utc, &time);
 #else
     gmtime_r(&time, &utc);
 #endif
+
     std::ostringstream output;
     output << std::put_time(&utc, "%Y-%m-%dT%H:%M:%SZ");
     return output.str();
 }
 
-std::string state_badge(const std::string& text, const std::string& css) {
-    return "<span class=\"badge " + css + "\">" + escape(text) + "</span>";
+std::string badge(const std::string& text, const std::string& css_class) {
+    return "<span class=\"status-badge " + css_class + "\">" +
+           html_escape(text) + "</span>";
+}
+
+std::string lifecycle_badge(const std::string& status) {
+    if (status == "Approved") return badge(status, "status-approved");
+    if (status == "Rejected") return badge(status, "status-failed");
+    if (status == "In Review") return badge(status, "status-review");
+    return badge(status, "status-draft");
 }
 
 std::string item_signals(const capcom::yaml::Item& item) {
     std::ostringstream output;
-    output << state_badge(item.status, "neutral");
+    output << lifecycle_badge(item.status);
+
     if (!item.implementations.empty()) {
-        output << state_badge("Code verknüpft", "good");
+        output << badge("Code verknüpft", "status-valid");
     } else if (item.type == "SRS" || item.type == "SEC" ||
-               test_type(item.type)) {
-        output << state_badge("Code fehlt", "warn");
+               is_test_type(item.type)) {
+        output << badge("Code fehlt", "status-open");
     }
-    if (test_type(item.type)) {
-        output << state_badge(
-            item.test.status.empty() ? "Nicht ausgeführt" : item.test.status,
-            item.test.status == "Passed" ? "good" : "bad");
+
+    if (is_test_type(item.type)) {
+        if (item.test.status == "Passed") {
+            output << badge("Passed", "status-passed");
+        } else if (item.test.status == "Failed") {
+            output << badge("Failed", "status-failed");
+        } else {
+            output << badge("Nicht ausgeführt", "status-open");
+        }
     }
+
     return output.str();
 }
 
-std::string tree_node(
+std::string render_tree_node(
     const std::string& uid,
     const Items& items,
     std::set<std::string> path) {
     const auto found = items.find(uid);
     if (found == items.end()) {
-        return "<li class=\"bad-text\">" + escape(uid) + " fehlt</li>";
+        return "<li class=\"text-red-700\">" + html_escape(uid) +
+               " fehlt</li>";
     }
+
     if (!path.insert(uid).second) {
-        return "<li><a href=\"#" + escape(uid) + "\">" +
-               escape(uid) + " (Referenz)</a></li>";
+        return "<li><a class=\"text-blue-800 hover:underline\" href=\"#" +
+               html_escape(uid) + "\">" + html_escape(uid) +
+               " (Referenz)</a></li>";
     }
 
     const auto& item = found->second;
+    const bool complete = is_chain_complete(uid, items, {});
+
     std::ostringstream output;
-    output << "<li><details><summary><a href=\"#" << escape(uid) << "\">"
-           << "<strong>" << escape(uid) << "</strong> "
-           << escape(item.title) << "</a> "
-           << (chain_complete(uid, items, {})
-                   ? state_badge("Kette gültig", "good")
-                   : state_badge("Kette offen", "warn"))
+    output << "<li class=\"tree-node\"><details><summary class=\"flex "
+              "cursor-pointer items-start gap-2 rounded-md px-2 py-1.5 "
+              "hover:bg-slate-100\">"
+           << "<span class=\"chevron mt-0.5 text-slate-400\">›</span>"
+           << "<span class=\"min-w-0 flex-1\"><a class=\"font-mono "
+              "font-bold text-blue-900 hover:underline\" href=\"#"
+           << html_escape(uid) << "\">" << html_escape(uid) << "</a> "
+           << "<span class=\"text-slate-700\">" << html_escape(item.title)
+           << "</span></span>"
+           << (complete
+                   ? badge("Kette gültig", "status-valid")
+                   : badge("Kette offen", "status-open"))
            << "</summary>";
+
     if (!item.children.empty()) {
         output << "<ul>";
-        for (const auto& child : item.children) {
-            output << tree_node(child, items, path);
+        for (const auto& child_uid : item.children) {
+            output << render_tree_node(child_uid, items, path);
         }
         output << "</ul>";
     }
+
     output << "</details></li>";
     return output.str();
 }
 
-std::string tree(const Items& items) {
+std::string render_tree(const Items& items) {
     std::ostringstream output;
-    output << "<ul class=\"tree\">";
+
     for (const auto& [uid, item] : items) {
         if (item.parents.empty()) {
-            output << tree_node(uid, items, {});
+            output << render_tree_node(uid, items, {});
         }
     }
-    output << "</ul>";
+
     return output.str();
 }
 
-std::string links(const capcom::yaml::Item& item) {
+std::string render_links(const capcom::yaml::Item& item) {
     std::ostringstream output;
+
     if (!item.parents.empty()) {
-        output << "<div><span class=\"muted\">Parent:</span> ";
+        output << "<p><span class=\"font-semibold text-slate-600\">Parent:</span> ";
         for (const auto& uid : item.parents) {
-            output << "<a href=\"#" << escape(uid) << "\">" << escape(uid)
+            output << "<a class=\"font-mono text-blue-800 hover:underline\" "
+                      "href=\"#"
+                   << html_escape(uid) << "\">" << html_escape(uid)
                    << "</a> ";
         }
-        output << "</div>";
+        output << "</p>";
     }
+
     if (!item.children.empty()) {
-        output << "<div><span class=\"muted\">Children:</span> ";
+        output << "<p><span class=\"font-semibold text-slate-600\">Children:</span> ";
         for (const auto& uid : item.children) {
-            output << "<a href=\"#" << escape(uid) << "\">" << escape(uid)
+            output << "<a class=\"font-mono text-blue-800 hover:underline\" "
+                      "href=\"#"
+                   << html_escape(uid) << "\">" << html_escape(uid)
                    << "</a> ";
         }
-        output << "</div>";
+        output << "</p>";
     }
+
     return output.str();
 }
 
-std::string card(
+std::string render_card(
     const capcom::yaml::Item& item,
     const Items& items,
     const std::vector<capcom::audit::AuditEntry>& history) {
-    const bool valid = chain_complete(item.uid, items, {});
+    const bool complete = is_chain_complete(item.uid, items, {});
     std::ostringstream output;
-    output << "<article id=\"" << escape(item.uid)
-           << "\" class=\"card requirement\" data-search=\""
-           << escape(item.uid + " " + item.title + " " + item.text) << "\">"
-           << "<details class=\"item\"><summary class=\"item-summary\">"
-           << "<div><span class=\"uid\">" << escape(item.uid)
-           << "</span><h2>" << escape(item.title) << "</h2>"
-           << "<p class=\"preview\">" << escape(item.text) << "</p></div>"
-           << "<div class=\"signals\">" << item_signals(item)
-           << (valid ? state_badge("Kette gültig", "good")
-                     : state_badge("Kette unvollständig", "warn"))
-           << "</div></summary><div class=\"details\">";
 
-    output << "<section><h3>Nachweise</h3>" << links(item);
+    output << "<article id=\"" << html_escape(item.uid)
+           << "\" class=\"requirement-card rounded-lg border border-slate-200 "
+              "bg-white shadow-md\" data-search=\""
+           << html_escape(item.uid + " " + item.title + " " + item.text)
+           << "\"><details>"
+           << "<summary class=\"flex cursor-pointer list-none flex-col gap-4 "
+              "p-5 md:flex-row md:items-start md:justify-between\">"
+           << "<div class=\"min-w-0\">"
+           << "<div class=\"font-mono text-sm font-bold text-blue-900\">"
+           << html_escape(item.uid) << "</div>"
+           << "<h2 class=\"mt-1 text-lg font-bold text-slate-900\">"
+           << html_escape(item.title) << "</h2>"
+           << "<p class=\"mt-2 leading-6 text-slate-700\">"
+           << html_escape(item.text) << "</p></div>"
+           << "<div class=\"flex max-w-md flex-wrap gap-2 md:justify-end\">"
+           << item_signals(item)
+           << (complete
+                   ? badge("Kette gültig", "status-valid")
+                   : badge("Kette unvollständig", "status-open"))
+           << "</div></summary>"
+           << "<div class=\"border-t border-slate-200 px-5 pb-5\">"
+           << "<section class=\"pt-5\"><h3 class=\"text-sm font-bold "
+              "uppercase tracking-wide text-blue-900\">Nachweise</h3>"
+           << "<div class=\"mt-3 space-y-1 text-sm\">"
+           << render_links(item) << "</div>";
+
     if (!item.implementations.empty()) {
-        output << "<ul class=\"evidence\">";
+        output << "<ul class=\"mt-4 space-y-2\">";
         for (const auto& implementation : item.implementations) {
-            output << "<li>✓ <code>" << escape(implementation.file) << ':'
+            output << "<li class=\"rounded-md border border-slate-200 bg-slate-50 "
+                      "px-3 py-2 text-sm\">"
+                   << "<span class=\"font-semibold text-green-700\">✓</span> "
+                   << "<code class=\"text-blue-900\">"
+                   << html_escape(implementation.file) << ':'
                    << implementation.start_line << '-' << implementation.end_line
-                   << "</code> <span class=\"muted\">Git "
-                   << escape(implementation.git_hash) << "</span></li>";
+                   << "</code> <span class=\"text-slate-500\">Git "
+                   << html_escape(implementation.git_hash) << "</span></li>";
         }
         output << "</ul>";
     }
-    if (!item.test.status.empty()) {
-        output << "<p>Testergebnis: "
-               << state_badge(item.test.status,
-                              item.test.status == "Passed" ? "good" : "bad")
-               << " <span class=\"muted\">" << escape(item.test.source)
-               << " · " << escape(item.test.timestamp) << "</span></p>";
-    }
-    output << "</section>";
 
-    output << "<details class=\"audit\"><summary>Audit-Historie ("
-           << history.size() << ")</summary><div class=\"table-wrap\"><table>"
-           << "<thead><tr><th>Zeit</th><th>Aktion</th><th>Benutzer</th>"
-              "<th>Grund</th></tr></thead><tbody>";
-    for (const auto& entry : history) {
-        output << "<tr><td>" << escape(entry.timestamp) << "</td><td>"
-               << escape(entry.action) << "</td><td>" << escape(entry.actor)
-               << "</td><td>" << escape(entry.reason) << "</td></tr>";
+    if (!item.test.status.empty()) {
+        output << "<p class=\"mt-4 text-sm\">Testergebnis: "
+               << (item.test.status == "Passed"
+                       ? badge("Passed", "status-passed")
+                       : badge(item.test.status, "status-failed"))
+               << " <span class=\"text-slate-500\">"
+               << html_escape(item.test.source) << " · "
+               << html_escape(item.test.timestamp) << "</span></p>";
     }
+
+    output << "</section>"
+           << "<details class=\"audit-history mt-5 rounded-md border "
+              "border-slate-200\"><summary class=\"cursor-pointer bg-slate-50 "
+              "px-4 py-3 text-sm font-semibold text-slate-700\">"
+           << "Audit-Historie (" << history.size() << ")</summary>"
+           << "<div class=\"overflow-x-auto\"><table class=\"min-w-full "
+              "divide-y divide-slate-200 text-left text-sm\">"
+           << "<thead class=\"bg-slate-100 text-xs uppercase tracking-wide "
+              "text-slate-600\"><tr><th class=\"px-4 py-3\">Zeit</th>"
+              "<th class=\"px-4 py-3\">Aktion</th>"
+              "<th class=\"px-4 py-3\">Benutzer</th>"
+              "<th class=\"px-4 py-3\">Grund</th></tr></thead>"
+              "<tbody class=\"divide-y divide-slate-100 bg-white\">";
+
+    for (const auto& entry : history) {
+        output << "<tr><td class=\"whitespace-nowrap px-4 py-3 text-slate-600\">"
+               << html_escape(entry.timestamp)
+               << "</td><td class=\"px-4 py-3 font-mono text-blue-900\">"
+               << html_escape(entry.action)
+               << "</td><td class=\"px-4 py-3 text-slate-700\">"
+               << html_escape(entry.actor)
+               << "</td><td class=\"px-4 py-3 text-slate-700\">"
+               << html_escape(entry.reason) << "</td></tr>";
+    }
+
     output << "</tbody></table></div></details></div></details></article>";
     return output.str();
 }
@@ -243,76 +322,208 @@ std::string render(
     std::size_t root_chains = 0;
     std::size_t implemented = 0;
     std::size_t passed = 0;
+
     for (const auto& [uid, item] : items) {
         (void)uid;
         if (!item.implementations.empty()) ++implemented;
         if (item.test.status == "Passed") ++passed;
+
         if (item.type == "USR" && item.parents.empty()) {
             ++root_chains;
-            if (chain_complete(item.uid, items, {})) ++complete_chains;
+            if (is_chain_complete(item.uid, items, {})) {
+                ++complete_chains;
+            }
         }
     }
 
     std::ostringstream cards;
     for (const auto& [uid, item] : items) {
-        cards << card(item, items, audit.entries(item.file, uid));
+        cards << render_card(item, items, audit.entries(item.file, uid));
     }
 
-    std::ostringstream html;
-    html << R"HTML(<!doctype html><html lang="de"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Captain's Log Report</title><script src="https://cdn.tailwindcss.com"></script>
-<style>
-:root{color-scheme:dark;--bg:#020617;--panel:#0f172a;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--cyan:#67e8f9}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,Segoe UI,sans-serif}a{color:var(--cyan);text-decoration:none}.header{padding:20px 24px;border-bottom:1px solid var(--line);background:#0f172a}.header h1{margin:0}.muted{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin-top:16px}.stat,.sidebar,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}.stat{padding:14px}.stat strong{display:block;font-size:22px}.layout{display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:18px;padding:18px}.sidebar{position:sticky;top:18px;align-self:start;padding:15px;max-height:calc(100vh - 36px);overflow:auto}.sidebar input{width:100%;padding:10px;background:#020617;border:1px solid var(--line);border-radius:8px;color:var(--text)}.tree,.tree ul{list-style:none;padding-left:14px}.tree li{margin:8px 0}.tree summary,.item-summary,.audit summary{cursor:pointer}.card{margin-bottom:12px;scroll-margin-top:16px}.item-summary{display:flex;justify-content:space-between;gap:18px;padding:16px;list-style:none}.item-summary::-webkit-details-marker{display:none}.uid,code{font-family:Consolas,monospace;color:var(--cyan)}h2{font-size:18px;margin:3px 0}.preview{margin:5px 0 0;color:#cbd5e1;line-height:1.45}.signals{display:flex;gap:7px;align-items:flex-start;justify-content:flex-end;flex-wrap:wrap}.badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}.good{background:#14532d;color:#bbf7d0}.warn{background:#713f12;color:#fde68a}.bad{background:#7f1d1d;color:#fecaca}.neutral{background:#1e293b;color:#cbd5e1}.details{border-top:1px solid var(--line);padding:0 16px 16px}.details h3{margin:16px 0 8px}.evidence{padding-left:18px}.audit{margin-top:14px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid #1e293b}.hidden{display:none!important}.bad-text{color:#fca5a5}
-@media(max-width:900px){.layout{grid-template-columns:1fr}.sidebar{position:static;max-height:none}.stats{grid-template-columns:repeat(2,1fr)}.item-summary{display:block}.signals{justify-content:flex-start;margin-top:10px}}
-</style></head><body><header class="header"><h1>Captain's Log Traceability Report</h1><p class="muted">Erzeugt: )HTML"
-         << escape(generated_at()) << " · Audit-Signaturen verifiziert</p>"
-         << "<div class=\"stats\"><div class=\"stat\"><strong>" << items.size()
-         << "</strong><span class=\"muted\">Objekte</span></div>"
-         << "<div class=\"stat\"><strong>" << implemented
-         << "</strong><span class=\"muted\">mit Code</span></div>"
-         << "<div class=\"stat\"><strong>" << passed
-         << "</strong><span class=\"muted\">Tests Passed</span></div>"
-         << "<div class=\"stat\"><strong>" << complete_chains << '/' << root_chains
-         << "</strong><span class=\"muted\">gültige USR-Ketten</span></div></div></header>"
-         << "<div class=\"layout\"><aside class=\"sidebar\"><input id=\"search\" "
-            "type=\"search\" placeholder=\"UID, Titel oder Text suchen...\">"
-            "<h3>Anforderungsbaum</h3>"
-         << tree(items) << "</aside><main>" << cards.str() << R"HTML(</main></div>
-<script>
-const input=document.getElementById('search');
-input.addEventListener('input',()=>{const q=input.value.toLocaleLowerCase('de');document.querySelectorAll('.requirement').forEach(card=>card.classList.toggle('hidden',!card.dataset.search.toLocaleLowerCase('de').includes(q)));});
-</script></body></html>)HTML";
-    return html.str();
+    const std::string html_template = R"HTML(
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captain's Log - Traceability Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        aerospace: {
+                            900: "#0b2d52",
+                            950: "#061e38"
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+        .requirement-card { scroll-margin-top: 2rem; }
+        .requirement-card summary::-webkit-details-marker,
+        .tree-node summary::-webkit-details-marker,
+        .audit-history summary::-webkit-details-marker { display: none; }
+        .tree-list, .tree-list ul { list-style: none; margin: 0; padding-left: 1.15rem; }
+        .tree-list > li { padding-left: 0; }
+        .tree-list li { margin: 0.35rem 0; }
+        .status-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.65rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+        .status-passed, .status-approved, .status-valid { border: 1px solid #bbf7d0; background: #f0fdf4; color: #15803d; }
+        .status-draft, .status-review, .status-open { border: 1px solid #fed7aa; background: #fff7ed; color: #c2410c; }
+        .status-failed { border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; }
+        .chevron { transition: transform 150ms ease; }
+        details[open] > summary .chevron { transform: rotate(90deg); }
+        .hidden-by-search { display: none !important; }
+        @media print {
+            body { background: white !important; }
+            aside { display: none !important; }
+            .report-layout { display: block !important; }
+            .requirement-card { break-inside: avoid; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <header class="bg-aerospace-900 text-white shadow-lg">
+        <div class="mx-auto flex max-w-screen-2xl items-center gap-5 px-6 py-6">
+            <img src="../captains-log-logo.png" class="h-16 w-auto" alt="Captain's Log Logo">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-200">Requirements · Risk · Verification</p>
+                <h1 class="mt-1 text-2xl font-bold tracking-tight md:text-3xl">Captain's Log - Traceability Report</h1>
+                <p class="mt-1 text-sm text-blue-100">Generiert: {{GENERATED_AT}} · Audit-Signaturen verifiziert</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-screen-2xl px-6 py-8">
+        <section class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Objekte</p><p class="mt-2 text-3xl font-bold text-blue-900">{{ITEM_COUNT}}</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Code-Verknüpfungen</p><p class="mt-2 text-3xl font-bold text-blue-900">{{IMPLEMENTED_COUNT}}</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Bestandene Tests</p><p class="mt-2 text-3xl font-bold text-green-700">{{PASSED_TEST_COUNT}}</p></div>
+            <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Gültige Ketten</p><p class="mt-2 text-3xl font-bold text-green-700">{{VALID_CHAIN_COUNT}} / {{CHAIN_COUNT}}</p></div>
+        </section>
+
+        <div class="report-layout grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+            <aside class="self-start rounded-lg border border-slate-200 bg-white shadow-md lg:sticky lg:top-6">
+                <div class="border-b border-slate-200 p-5">
+                    <h2 class="text-lg font-bold text-blue-900">Requirements Tree</h2>
+                    <p class="mt-1 text-sm text-slate-500">Navigation durch die Traceability-Struktur</p>
+                </div>
+                <div class="p-5">
+                    <input id="requirement-search" type="search" placeholder="UID, Titel oder Text suchen" class="mb-5 w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100">
+                    <nav class="max-h-[65vh] overflow-auto pr-2 text-sm text-slate-700">
+                        <ul class="tree-list">{{REQUIREMENTS_TREE}}</ul>
+                    </nav>
+                </div>
+            </aside>
+
+            <section class="min-w-0 space-y-4">{{REQUIREMENT_CARDS}}</section>
+        </div>
+    </main>
+
+    <footer class="mt-10 border-t border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-screen-2xl justify-between px-6 py-5 text-xs text-slate-500">
+            <p>Captain's Log · Requirements and Traceability</p>
+            <p>Berichtsintegrität: <span class="font-semibold text-green-700">kryptografisch verifiziert</span></p>
+        </div>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById("requirement-search");
+        searchInput.addEventListener("input", () => {
+            const query = searchInput.value.trim().toLocaleLowerCase("de");
+            document.querySelectorAll(".requirement-card").forEach((card) => {
+                const text = (card.dataset.search || "").toLocaleLowerCase("de");
+                card.classList.toggle("hidden-by-search", query.length > 0 && !text.includes(query));
+            });
+        });
+    </script>
+</body>
+</html>
+)HTML";
+
+    std::string html = html_template;
+
+    const auto replace_all = [&html](
+                                 const std::string& placeholder,
+                                 const std::string& value) {
+        std::size_t position = 0;
+        while ((position = html.find(placeholder, position)) !=
+               std::string::npos) {
+            html.replace(position, placeholder.size(), value);
+            position += value.size();
+        }
+    };
+
+    replace_all("{{GENERATED_AT}}", generated_at_utc());
+    replace_all("{{ITEM_COUNT}}", std::to_string(items.size()));
+    replace_all("{{IMPLEMENTED_COUNT}}", std::to_string(implemented));
+    replace_all("{{PASSED_TEST_COUNT}}", std::to_string(passed));
+    replace_all("{{VALID_CHAIN_COUNT}}", std::to_string(complete_chains));
+    replace_all("{{CHAIN_COUNT}}", std::to_string(root_chains));
+    replace_all("{{REQUIREMENTS_TREE}}", render_tree(items));
+    replace_all("{{REQUIREMENT_CARDS}}", cards.str());
+
+    return html;
 }
 
-void write_atomic(const std::filesystem::path& file, const std::string& content) {
+void write_atomic(
+    const std::filesystem::path& file,
+    const std::string& content) {
     auto temporary = file;
     temporary += ".tmp";
+
     {
-        std::ofstream output(temporary, std::ios::binary | std::ios::trunc);
-        if (!output) throw std::runtime_error("Cannot write " + temporary.string());
-        output.write(content.data(), static_cast<std::streamsize>(content.size()));
+        std::ofstream output(
+            temporary,
+            std::ios::binary | std::ios::trunc);
+        if (!output) {
+            throw std::runtime_error("Cannot write " + temporary.string());
+        }
+
+        output.write(
+            content.data(),
+            static_cast<std::streamsize>(content.size()));
+        if (!output) {
+            throw std::runtime_error("Failed writing " + temporary.string());
+        }
     }
+
     std::error_code error;
     std::filesystem::remove(file, error);
     error.clear();
     std::filesystem::rename(temporary, file, error);
-    if (error) throw std::runtime_error("Cannot create report: " + error.message());
+
+    if (error) {
+        throw std::runtime_error(
+            "Cannot create report: " + error.message());
+    }
 }
 
 } // namespace
 
 int PublishCommand::execute(const std::filesystem::path& project) const {
-    const auto identity = capcom::identity::IdentityManager{}.load_or_create();
+    const auto identity =
+        capcom::identity::IdentityManager{}.load_or_create();
     const capcom::audit::HistoryService audit{identity};
+
     audit.verify_project(project);
+
     const auto items = capcom::yaml::YamlStore{project}.load_all();
-    if (items.empty()) throw std::runtime_error("No requirements found.");
+    if (items.empty()) {
+        throw std::runtime_error("No requirements found.");
+    }
+
     const auto report = project / "report.html";
     write_atomic(report, render(items, audit));
-    std::cout << "Published compact verified report: " << report.string() << '\n';
+
+    std::cout << "Published verified report: "
+              << report.string() << '\n';
     return 0;
 }
 

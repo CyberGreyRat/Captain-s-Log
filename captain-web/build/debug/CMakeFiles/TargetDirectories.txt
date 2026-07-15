@@ -1,0 +1,4 @@
+C:/Users/luec-a/Documents/CapCom/captain-web/build/debug/CMakeFiles/captain_sqlite.dir
+C:/Users/luec-a/Documents/CapCom/captain-web/build/debug/CMakeFiles/captain-web.dir
+C:/Users/luec-a/Documents/CapCom/captain-web/build/debug/CMakeFiles/edit_cache.dir
+C:/Users/luec-a/Documents/CapCom/captain-web/build/debug/CMakeFiles/rebuild_cache.dir
