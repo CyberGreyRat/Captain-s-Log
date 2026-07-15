@@ -41,7 +41,7 @@ const A='/api/v1',S={items:[],selected:null,mode:'all',editing:false,docs:[],doc
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Host</dt><dd class="mt-1 text-sm">${value(x.created_host)}</dd></div>
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Erstellt am</dt><dd class="mt-1 text-sm">${dateValue(x.created_at)}</dd></div>
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Quelle</dt><dd class="mt-1 text-sm">${value(x.created_source)}</dd></div>
-            <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Letzte Ã„nderung</dt><dd class="mt-1 text-sm">${dateValue(x.updated_at)}</dd></div>
+            <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Letzte Änderung</dt><dd class="mt-1 text-sm">${dateValue(x.updated_at)}</dd></div>
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Bearbeitet von</dt><dd class="mt-1 text-sm">${value(x.updated_by)}</dd></div>
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Revision</dt><dd class="mt-1 text-sm">${value(x.revision,'Nicht vorhanden')}</dd></div>
             <div><dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Speicherstatus</dt><dd class="mt-1 text-sm">${esc(x.read_only?'Read-only':'Bearbeitbar')}</dd></div>

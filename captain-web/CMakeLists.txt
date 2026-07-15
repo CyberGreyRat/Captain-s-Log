@@ -42,6 +42,8 @@ add_executable(
         src/sync/sync_service.cpp
         src/api/api_server.cpp
         src/api/cli_bridge.cpp
+        src/auth/auth_service.cpp
+        src/project/project_catalog.cpp
 
 )
 

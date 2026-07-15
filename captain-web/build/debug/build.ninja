@@ -166,6 +166,26 @@ build CMakeFiles/captain-web.dir/src/api/cli_bridge.cpp.obj: CXX_COMPILER__capta
   OBJECT_FILE_DIR = CMakeFiles\captain-web.dir\src\api
   TARGET_SUPPORT_DIR = CMakeFiles\captain-web.dir
 
+build CMakeFiles/captain-web.dir/src/auth/auth_service.cpp.obj: CXX_COMPILER__captain-web_unscanned_Debug C$:/Users/luec-a/Documents/CapCom/captain-web/src/auth/auth_service.cpp || cmake_object_order_depends_target_captain-web
+  CONFIG = Debug
+  DEFINES = -DNTDDI_VERSION=0x0A000000 -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00
+  DEP_FILE = CMakeFiles\captain-web.dir\src\auth\auth_service.cpp.obj.d
+  FLAGS = -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -Werror
+  INCLUDES = -IC:/Users/luec-a/Documents/CapCom/captain-web/include -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party/httplib -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party/sqlite
+  OBJECT_DIR = CMakeFiles\captain-web.dir
+  OBJECT_FILE_DIR = CMakeFiles\captain-web.dir\src\auth
+  TARGET_SUPPORT_DIR = CMakeFiles\captain-web.dir
+
+build CMakeFiles/captain-web.dir/src/project/project_catalog.cpp.obj: CXX_COMPILER__captain-web_unscanned_Debug C$:/Users/luec-a/Documents/CapCom/captain-web/src/project/project_catalog.cpp || cmake_object_order_depends_target_captain-web
+  CONFIG = Debug
+  DEFINES = -DNTDDI_VERSION=0x0A000000 -DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00
+  DEP_FILE = CMakeFiles\captain-web.dir\src\project\project_catalog.cpp.obj.d
+  FLAGS = -g -std=c++2a -Wall -Wextra -Wpedantic -Wconversion -Werror
+  INCLUDES = -IC:/Users/luec-a/Documents/CapCom/captain-web/include -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party/httplib -IC:/Users/luec-a/Documents/CapCom/captain-web/third_party/sqlite
+  OBJECT_DIR = CMakeFiles\captain-web.dir
+  OBJECT_FILE_DIR = CMakeFiles\captain-web.dir\src\project
+  TARGET_SUPPORT_DIR = CMakeFiles\captain-web.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target captain-web
@@ -174,7 +194,7 @@ build CMakeFiles/captain-web.dir/src/api/cli_bridge.cpp.obj: CXX_COMPILER__capta
 #############################################
 # Link the executable captain-web.exe
 
-build captain-web.exe: CXX_EXECUTABLE_LINKER__captain-web_Debug CMakeFiles/captain-web.dir/src/main.cpp.obj CMakeFiles/captain-web.dir/src/storage/local_yaml_storage.cpp.obj CMakeFiles/captain-web.dir/src/storage/sqlite_management_storage.cpp.obj CMakeFiles/captain-web.dir/src/repository/hybrid_repository.cpp.obj CMakeFiles/captain-web.dir/src/service/requirement_creation_service.cpp.obj CMakeFiles/captain-web.dir/src/sync/sync_service.cpp.obj CMakeFiles/captain-web.dir/src/api/api_server.cpp.obj CMakeFiles/captain-web.dir/src/api/cli_bridge.cpp.obj | libcaptain_sqlite.a || libcaptain_sqlite.a
+build captain-web.exe: CXX_EXECUTABLE_LINKER__captain-web_Debug CMakeFiles/captain-web.dir/src/main.cpp.obj CMakeFiles/captain-web.dir/src/storage/local_yaml_storage.cpp.obj CMakeFiles/captain-web.dir/src/storage/sqlite_management_storage.cpp.obj CMakeFiles/captain-web.dir/src/repository/hybrid_repository.cpp.obj CMakeFiles/captain-web.dir/src/service/requirement_creation_service.cpp.obj CMakeFiles/captain-web.dir/src/sync/sync_service.cpp.obj CMakeFiles/captain-web.dir/src/api/api_server.cpp.obj CMakeFiles/captain-web.dir/src/api/cli_bridge.cpp.obj CMakeFiles/captain-web.dir/src/auth/auth_service.cpp.obj CMakeFiles/captain-web.dir/src/project/project_catalog.cpp.obj | libcaptain_sqlite.a || libcaptain_sqlite.a
   CONFIG = Debug
   FLAGS = -g
   LINK_LIBRARIES = libcaptain_sqlite.a  -lws2_32  -liphlpapi  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
