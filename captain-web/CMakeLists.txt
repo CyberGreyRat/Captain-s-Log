@@ -38,8 +38,11 @@ add_executable(
         src/storage/local_yaml_storage.cpp
         src/storage/sqlite_management_storage.cpp
         src/repository/hybrid_repository.cpp
+        src/service/requirement_creation_service.cpp
         src/sync/sync_service.cpp
         src/api/api_server.cpp
+        src/api/cli_bridge.cpp
+
 )
 
 target_include_directories(
