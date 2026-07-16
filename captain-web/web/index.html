@@ -173,7 +173,7 @@
             if (text.includes('Unknown child UID')) return text.replace('Unknown child UID', 'Unbekannte Child-UID');
             if (text.includes('Cycle detected')) return `Die Verknüpfung würde einen Zyklus erzeugen. ${text}`;
             if (text.includes('Developer-Sitzung')) return `Diese Aktion ist nur in einer mit cap gui gestarteten Developer-Sitzung erlaubt.`;
-            if (text.includes('Failed to fetch')) return `Der Captain-Webserver ist nicht erreichbar. Prüfe, ob cap gui noch lÃ¤uft.`;
+            if (text.includes('Failed to fetch')) return `Der Captain-Webserver ist nicht erreichbar. Prüfe, ob cap gui noch läuft.`;
             return text;
         }
         function notify(kind, title, message, details = '') {
@@ -321,7 +321,7 @@
             } catch (error) { showReqError(error.message, `${error.method || 'POST'} ${error.path || ''}${error.original && error.original !== error.message ? '\n' + error.original : ''}`) }
             finally { if (submit) { submit.disabled = false; submit.textContent = 'Speichern' } }
         }; $('archiveReq').onclick = () => archive(`/requirements/${S.selected}/archive`); $('restoreReq').onclick = () => archive(`/requirements/${S.selected}/restore`); document.querySelectorAll('.mode').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; draw() }); $('search').oninput = draw; document.querySelectorAll('.tab').forEach(t => t.onclick = () => { document.querySelectorAll('.tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); document.querySelectorAll('.panel').forEach(x => x.classList.remove('show')); $(t.dataset.panel).classList.add('show'); if (t.dataset.panel === 'documents') docs(); if (t.dataset.panel === 'history') history() }); document.querySelectorAll('.cmd').forEach(button => button.onclick = async () => {
-            if (button.disabled) return; button.disabled = true; const label = button.textContent; button.textContent = 'LÃ¤uft...';
+            if (button.disabled) return; button.disabled = true; const label = button.textContent; button.textContent = 'Läuft...';
             try { const method = button.dataset.method || 'POST'; const result = await api('/project/' + button.dataset.command, { method, body: method === 'POST' ? '{}' : undefined }); $('commandOut').textContent = result.output }
             finally { button.disabled = false; button.textContent = label }
         }); async function docs() { S.docs = (await api('/documents')).documents || []; const v = S.docs.filter(x => x.kind.startsWith('archived:') === S.docArchive); $('library').innerHTML = v.length ? v.map(card).join('') : 'Keine Einträge'; bindDocs(v) } $('activeDocs').onclick = () => { S.docArchive = false; docs() }; $('archivedDocs').onclick = () => { S.docArchive = true; docs() }; $('globalLink').onclick = () => newLink(); $('cancelLink').onclick = () => hide('linkModal'); $('linkForm').onsubmit = async e => { e.preventDefault(); const x = S.editingLink, body = { requirement_uid: $('linkUid').value, kind: $('linkKind').value, label: $('linkLabel').value, location: $('linkLocation').value, version: $('linkVersion').value, global: !$('linkUid').value }; await api(x ? `/documents/${x.id}/update` : '/documents/link', { method: 'POST', body: JSON.stringify(body) }); hide('linkModal'); await docs(); if (S.selected) await select(S.selected) }; $('archiveLink').onclick = () => archive(`/documents/${S.editingLink.id}/archive`); $('restoreLink').onclick = () => archive(`/documents/${S.editingLink.id}/restore`); async function history() {

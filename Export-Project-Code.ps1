@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$ProjectRoot = "C:\Users\luec-a\Documents\CapCom",
     [string]$OutputFile = "",
     [switch]$IncludeGeneratedFiles
@@ -83,6 +83,38 @@ function Test-IsExcludedDirectory {
         $Directory.Name -like "backup-*"
 }
 
+function Get-RelativeProjectPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BasePath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$FullPath
+    )
+
+    $normalizedBase = [System.IO.Path]::GetFullPath($BasePath).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    )
+    $normalizedFull = [System.IO.Path]::GetFullPath($FullPath)
+
+    $baseWithSeparator = $normalizedBase + [System.IO.Path]::DirectorySeparatorChar
+    if ($normalizedFull.StartsWith(
+        $baseWithSeparator,
+        [System.StringComparison]::OrdinalIgnoreCase
+    )) {
+        return $normalizedFull.Substring($baseWithSeparator.Length)
+    }
+
+    # Fallback for unusual paths, compatible with Windows PowerShell 5.1.
+    $baseUri = [System.Uri]::new($baseWithSeparator)
+    $fullUri = [System.Uri]::new($normalizedFull)
+    $relativeUri = $baseUri.MakeRelativeUri($fullUri)
+    return [System.Uri]::UnescapeDataString($relativeUri.ToString()).Replace(
+        '/',
+        [System.IO.Path]::DirectorySeparatorChar
+    )
+}
 function Get-ProjectFiles {
     param([string]$Root)
 
@@ -137,14 +169,14 @@ try {
     $writer.WriteLine("===== FILE INDEX =====")
 
     foreach ($file in $files) {
-        $relativePath = [System.IO.Path]::GetRelativePath($ProjectRoot, $file.FullName)
+        $relativePath = Get-RelativeProjectPath -BasePath $ProjectRoot -FullPath $file.FullName
         $writer.WriteLine($relativePath)
     }
 
     $writer.WriteLine("===== END FILE INDEX =====")
 
     foreach ($file in $files) {
-        $relativePath = [System.IO.Path]::GetRelativePath($ProjectRoot, $file.FullName)
+        $relativePath = Get-RelativeProjectPath -BasePath $ProjectRoot -FullPath $file.FullName
         $writer.WriteLine("")
         $writer.WriteLine("================================================================================")
         $writer.WriteLine("FILE: $relativePath")

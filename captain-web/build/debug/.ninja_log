@@ -95,3 +95,17 @@
 12421	33299	8058818361469111	captain-web.exe	e9396d72548773d5
 6	16878	8058957217314180	CMakeFiles/captain-web.dir/src/api/api_server.cpp.obj	6556fa3e96f494e1
 16878	42712	8058957385995655	captain-web.exe	e9396d72548773d5
+2	28	8058975961971314	clean	29ee3578e5d69fe4
+65	1592	8058975962970605	CMakeFiles/captain-web.dir/src/auth/auth_service.cpp.obj	2625a3248352aa4c
+60	1803	8058975962920516	CMakeFiles/captain-web.dir/src/api/cli_bridge.cpp.obj	3b4c367d64b59afc
+49	3321	8058975962819284	CMakeFiles/captain-web.dir/src/sync/sync_service.cpp.obj	7dd3cc5da4fa68b2
+37	3593	8058975962684338	CMakeFiles/captain-web.dir/src/repository/hybrid_repository.cpp.obj	2dfb5a382321f7d4
+43	3644	8058975962754091	CMakeFiles/captain-web.dir/src/service/requirement_creation_service.cpp.obj	f79ff09cec44aee3
+32	3781	8058975962643154	CMakeFiles/captain-web.dir/src/storage/sqlite_management_storage.cpp.obj	80dd12b94e25903a
+71	4393	8058975963030222	CMakeFiles/captain-web.dir/src/project/project_catalog.cpp.obj	d1ba7faa967693eb
+26	6813	8058975962591298	CMakeFiles/captain-web.dir/src/storage/local_yaml_storage.cpp.obj	aeed08af4c18b60f
+13	7463	8058975962449353	CMakeFiles/captain_sqlite.dir/third_party/sqlite/sqlite3.c.obj	af31e0ef357944c6
+7464	7570	8058976036950068	libcaptain_sqlite.a	d91900234ae4cd95
+21	13653	8058975962530862	CMakeFiles/captain-web.dir/src/main.cpp.obj	21a3224138ff6cc6
+55	18444	8058975962873609	CMakeFiles/captain-web.dir/src/api/api_server.cpp.obj	6556fa3e96f494e1
+18444	45015	8058976146756660	captain-web.exe	e9396d72548773d5
