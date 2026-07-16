@@ -762,7 +762,6 @@ $firstHeader = $section.Headers.Item(2).Range
             @('Verantwortlich', $(Join-DisplayValue $item.attributes.test_responsible)),
             @('Parents', $(Join-DisplayValue $item.parents))
         )
-        Add-ImplementationAndScanEvidence $selection $item
     }
 
     Write-Host '[word 9/14] Audit evidence...'
