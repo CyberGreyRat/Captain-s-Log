@@ -167,7 +167,7 @@ namespace capcom::audit
             o << std::put_time(&x, "%Y-%m-%dT%H:%M:%SZ");
             return o.str();
         }
-        std::string payload(const AuditEntry &e) { return "CAPTAINS-LOG-HISTORY-V2\nuid=" + e.uid + "\ntimestamp=" + e.timestamp + "\naction=" + e.action + "\nactor=" + e.actor + "\nhost_id=" + e.host_id + "\nkey_id=" + e.key_id + "\ncontent_hash=" + e.content_hash + "\nprevious_signature=" + e.previous_signature + "\nreason=" + e.reason + "\n"; }
+        std::string payload(const AuditEntry &e) { auto value = "CAPTAINS-LOG-HISTORY-V2\nuid=" + e.uid + "\ntimestamp=" + e.timestamp + "\naction=" + e.action + "\nactor=" + e.actor + "\nhost_id=" + e.host_id + "\nkey_id=" + e.key_id + "\ncontent_hash=" + e.content_hash + "\nprevious_signature=" + e.previous_signature + "\nreason=" + e.reason + "\n"; if (!e.yaml_content.empty()) value += "yaml_content=" + e.yaml_content + "\n"; return value; }
         std::vector<AuditEntry> parse_central(const std::filesystem::path &p)
         {
             std::vector<AuditEntry> out;
@@ -211,6 +211,8 @@ namespace capcom::audit
                     e.reason = v;
                 else if (k == "signature")
                     e.signature = v;
+                else if (k == "yaml_content")
+                    e.yaml_content = v;
             }
             finish();
             return out;
@@ -232,6 +234,8 @@ namespace capcom::audit
                 v.push_back("    previous_signature: " + quote(e.previous_signature));
                 v.push_back("    reason: " + quote(e.reason));
                 v.push_back("    signature: " + quote(e.signature));
+                if (!e.yaml_content.empty())
+                    v.push_back("    yaml_content: " + quote(e.yaml_content));
             }
             return v;
         }
@@ -307,6 +311,8 @@ namespace capcom::audit
                     e.reason = v;
                 else if (k == "signature")
                     e.signature = v;
+                else if (k == "yaml_content")
+                    e.yaml_content = v;
             }
             finish();
             return out;

@@ -22,7 +22,7 @@ std::string read_binary(const std::filesystem::path& path) {
     if (!input) return {};
     return {std::istreambuf_iterator<char>(input), {}};
 }
-std::string now() {
+[[maybe_unused]] std::string now() {
     const auto time = std::chrono::system_clock::to_time_t(
         std::chrono::system_clock::now());
     std::tm utc{};
@@ -51,7 +51,7 @@ json read_events(const std::filesystem::path& path) {
     try { return json::parse(input); }
     catch (...) { return json::array(); }
 }
-void write_events(const std::filesystem::path& path, const json& events) {
+[[maybe_unused]] void write_events(const std::filesystem::path& path, const json& events) {
     std::filesystem::create_directories(path.parent_path());
     auto temporary = path;
     temporary += ".tmp";
@@ -120,14 +120,11 @@ void ApiServer::audit(
     const std::string& action,
     const std::string& object_uid,
     const std::string& detail) const {
-    const auto path = project_ / ".captain" / "web-audit.json";
-    auto events = read_events(path);
-    events.push_back({
-        {"timestamp", now()}, {"action", action},
-        {"object_uid", object_uid}, {"actor", user()},
-        {"host", host()}, {"source", "Captain Web"},
-        {"detail", detail}});
-    write_events(path, events);
+    (void)action;
+    (void)object_uid;
+    (void)detail;
+    // Requirement mutations are recorded once by the signed Captain CLI
+    // history invoked through cli_.sign(). Button clicks are not history.
 }
 void ApiServer::routes() {
     server_.Get("/", [this](const auto&, auto& response) {
@@ -204,7 +201,11 @@ void ApiServer::routes() {
             const auto signed_result = cli_.sign(
                 created.uid,
                 "Created with Captain Web by " + user() + " on " + host());
-            audit("REQUIREMENT_CREATED", created.uid,
+            if (signed_result.exit_code != 0) {
+                throw std::runtime_error(
+                    "Captain CLI history failed for " + created.uid + ": " +
+                    signed_result.output);
+            }            audit("REQUIREMENT_CREATED", created.uid,
                   "Requirement created and links assigned.");
             reply(response,
                   {{"item", created}, {"audit", command_json(signed_result)}},
@@ -236,7 +237,11 @@ void ApiServer::routes() {
             auto updated = repository_.update(*found);
             const auto signed_result = cli_.sign(
                 uid, "Edited with Captain Web by " + user());
-            audit("REQUIREMENT_UPDATED", uid,
+            if (signed_result.exit_code != 0) {
+                throw std::runtime_error(
+                    "Captain CLI history failed for " + uid + ": " +
+                    signed_result.output);
+            }            audit("REQUIREMENT_UPDATED", uid,
                   body.value("reason", "Requirement edited in browser."));
             reply(response,
                   {{"item", updated}, {"audit", command_json(signed_result)}});
@@ -255,7 +260,7 @@ void ApiServer::routes() {
             const auto uid = request.matches[1].str();
             auto comment = repository_.add_comment(
                 uid, user(), body.value("text", ""));
-            audit("COMMENT_ADDED", uid, comment.text);
+
             reply(response, {{"comment", comment}}, 201);
         });
     server_.Get(R"(/api/v1/requirements/([A-Za-z0-9_-]+)/files)",
@@ -384,7 +389,7 @@ void ApiServer::routes() {
             if (found->kind.rfind("archived:", 0) != 0) found->kind = "archived:" + found->kind;
             found->created_by = user();
             const auto saved = repository_.update_file(*found);
-            audit("DOCUMENT_ARCHIVED", found->requirement_uid, reason);
+
             reply(response, {{"document", saved}});
         } catch (const std::exception& error) { fail(response, 422, error.what()); }
     });
@@ -402,27 +407,31 @@ void ApiServer::routes() {
             if (found->kind.rfind(prefix, 0) == 0) found->kind = found->kind.substr(prefix.size());
             found->created_by = user();
             const auto saved = repository_.update_file(*found);
-            audit("DOCUMENT_RESTORED", found->requirement_uid, reason);
+
             reply(response, {{"document", saved}});
         } catch (const std::exception& error) { fail(response, 422, error.what()); }
     });
     server_.Get("/api/v1/project/status", [this](const auto&, auto& response) {
         reply(response, command_json(cli_.status()));
     });
-    server_.Post("/api/v1/project/scan", [this](const auto&, auto& response) {
-        auto result = cli_.scan(); audit("PROJECT_SCANNED", "PROJECT", result.output);
+    server_.Post("/api/v1/project/scan", [this](const auto& request, auto& response) {
+        if (!require_developer(request, response)) return;
+        const auto result = cli_.scan();
         reply(response, command_json(result));
     });
-    server_.Post("/api/v1/project/verify", [this](const auto&, auto& response) {
-        auto result = cli_.verify(); audit("PROJECT_VERIFIED", "PROJECT", result.output);
+    server_.Post("/api/v1/project/verify", [this](const auto& request, auto& response) {
+        if (!require_developer(request, response)) return;
+        const auto result = cli_.verify();
         reply(response, command_json(result));
     });
-    server_.Post("/api/v1/project/validate", [this](const auto&, auto& response) {
-        auto result = cli_.validate(); audit("PROJECT_VALIDATED", "PROJECT", result.output);
+    server_.Post("/api/v1/project/validate", [this](const auto& request, auto& response) {
+        if (!require_developer(request, response)) return;
+        const auto result = cli_.validate();
         reply(response, command_json(result));
     });
-    server_.Post("/api/v1/project/publish", [this](const auto&, auto& response) {
-        auto result = cli_.publish(); audit("REPORT_PUBLISHED", "PROJECT", result.output);
+    server_.Post("/api/v1/project/publish", [this](const auto& request, auto& response) {
+        if (!require_developer(request, response)) return;
+        const auto result = cli_.publish();
         reply(response, command_json(result));
     });
     server_.Get("/api/v1/project/tree", [this](const auto&, auto& response) {

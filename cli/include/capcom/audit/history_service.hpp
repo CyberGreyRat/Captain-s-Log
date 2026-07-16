@@ -6,7 +6,7 @@
 namespace capcom::audit {
 struct AuditEntry {
     std::string uid, timestamp, action, actor, host_id, key_id, algorithm;
-    std::string public_key, content_hash, previous_signature, reason, signature;
+    std::string public_key, content_hash, previous_signature, reason, signature, yaml_content;
 };
 class HistoryService final {
 public:
