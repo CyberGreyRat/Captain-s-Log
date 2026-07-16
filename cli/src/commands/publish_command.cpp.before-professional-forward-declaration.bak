@@ -510,9 +510,6 @@ void write_atomic(
 
 } // namespace
 
-void run_professional_publisher(
-    const std::filesystem::path& project,
-    const std::filesystem::path& html);
 int PublishCommand::execute(const std::filesystem::path& project) const {
     const auto identity =
         capcom::identity::IdentityManager{}.load_or_create();

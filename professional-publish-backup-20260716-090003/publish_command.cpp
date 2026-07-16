@@ -15,9 +15,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 namespace capcom::commands {
 namespace {
@@ -510,9 +507,6 @@ void write_atomic(
 
 } // namespace
 
-void run_professional_publisher(
-    const std::filesystem::path& project,
-    const std::filesystem::path& html);
 int PublishCommand::execute(const std::filesystem::path& project) const {
     const auto identity =
         capcom::identity::IdentityManager{}.load_or_create();
@@ -527,63 +521,10 @@ int PublishCommand::execute(const std::filesystem::path& project) const {
 
     const auto report = project / "report.html";
     write_atomic(report, render(items, audit));
-    run_professional_publisher(project, report);
 
     std::cout << "Published verified report: "
               << report.string() << '\n';
     return 0;
 }
 
-#ifdef _WIN32
-std::wstring quote_argument(const std::wstring& value) {
-    std::wstring result = L"\"";
-    for (const auto character : value) {
-        if (character == L'\"') result += L"\\\"";
-        else result += character;
-    }
-    result += L"\"";
-    return result;
-}
-
-void run_professional_publisher(
-    const std::filesystem::path& project,
-    const std::filesystem::path& html) {
-    std::vector<wchar_t> module(32768, L'\0');
-    const auto length = GetModuleFileNameW(
-        nullptr,
-        module.data(),
-        static_cast<DWORD>(module.size()));
-    if (length == 0 || length >= module.size()) {
-        throw std::runtime_error(
-            "Cannot locate cap.exe for professional publishing.");
-    }
-
-    const auto script = std::filesystem::path{
-        std::wstring(module.data(), length)}.parent_path() /
-        L"Publish-CaptainsLog-Professional.ps1";
-    if (!std::filesystem::exists(script)) {
-        throw std::runtime_error(
-            "Professional publisher missing: " + script.string());
-    }
-
-    const std::wstring command =
-        L"powershell.exe -NoProfile -ExecutionPolicy Bypass -File " +
-        quote_argument(script.wstring()) +
-        L" -Project " + quote_argument(project.wstring()) +
-        L" -Html " + quote_argument(html.wstring());
-
-    const int result = _wsystem(command.c_str());
-    if (result != 0) {
-        throw std::runtime_error(
-            "Professional report package generation failed.");
-    }
-}
-#else
-void run_professional_publisher(
-    const std::filesystem::path&,
-    const std::filesystem::path&) {
-    throw std::runtime_error(
-        "Professional publishing currently requires Windows and Microsoft Word.");
-}
-#endif
 } // namespace capcom::commands
