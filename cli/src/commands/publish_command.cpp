@@ -411,7 +411,13 @@ std::string render(
             <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Gültige Ketten</p><p class="mt-2 text-3xl font-bold text-green-700">{{VALID_CHAIN_COUNT}} / {{CHAIN_COUNT}}</p></div>
         </section>
 
-        <div class="report-layout grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
+        <section class="mb-8 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+  <div class="flex items-center justify-between gap-4">
+    <div><h2 class="text-lg font-bold text-blue-900">Traceability Graph</h2><p class="mt-1 text-sm text-slate-500">Knoten anklicken, um zur Anforderung zu springen.</p></div>
+    <div class="flex gap-2"><button id="graph-minus" class="rounded border px-3 py-1 text-sm">-</button><button id="graph-reset" class="rounded border px-3 py-1 text-sm">100%</button><button id="graph-plus" class="rounded border px-3 py-1 text-sm">+</button></div>
+  </div>
+  <div class="mt-4 overflow-auto rounded border border-slate-100 bg-slate-50 p-3"><svg id="traceability-graph" class="min-h-64 min-w-full" role="img" aria-label="Traceability graph"></svg></div>
+</section><div class="report-layout grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
             <aside class="self-start rounded-lg border border-slate-200 bg-white shadow-md lg:sticky lg:top-6">
                 <div class="border-b border-slate-200 p-5">
                     <h2 class="text-lg font-bold text-blue-900">Requirements Tree</h2>
@@ -437,7 +443,39 @@ std::string render(
     </footer>
 
     <script>
-        const searchInput = document.getElementById("requirement-search");
+        const graphSvg = document.getElementById("traceability-graph");
+        const graphNodes = [...document.querySelectorAll(".tree-node summary")].map((summary) => {
+            const link = summary.querySelector('a[href^="#"]');
+            if (!link) return null;
+            const uid = link.textContent.trim();
+            const article = document.getElementById(uid);
+            const title = article?.querySelector("h2")?.textContent?.trim() || uid;
+            const depth = Math.max(0, summary.closest("li")?.parentElement?.closest("li") ? 1 : 0);
+            return { uid, title, summary, depth };
+        }).filter(Boolean).filter((value, index, all) => all.findIndex(x => x.uid === value.uid) === index);
+        const parentMap = new Map();
+        document.querySelectorAll('.requirement-card').forEach(card => {
+            const uid = card.id;
+            const links = [...card.querySelectorAll('a[href^="#"]')].map(a => a.getAttribute('href').slice(1));
+            parentMap.set(uid, links);
+        });
+        function drawGraph(scale = 1) {
+            if (!graphSvg) return;
+            const width = Math.max(900, graphNodes.length * 145), height = 360;
+            graphSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            graphSvg.style.width = `${width * scale}px`;
+            const positions = new Map();
+            graphNodes.forEach((node, index) => positions.set(node.uid, {x: 70 + index * 140, y: 90 + (index % 3) * 90}));
+            const esc = value => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+            let html = '<defs><marker id="ga" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#98A2B3"/></marker></defs>';
+            parentMap.forEach((targets, uid) => targets.forEach(target => { const a=positions.get(uid), b=positions.get(target); if(a&&b) html += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#98A2B3" stroke-width="2" marker-end="url(#ga)"/>`; }));
+            graphNodes.forEach(node => { const p=positions.get(node.uid); html += `<a href="#${esc(node.uid)}"><circle cx="${p.x}" cy="${p.y}" r="27" fill="#0b2d52" stroke="#d0a53a" stroke-width="3"/><text x="${p.x}" y="${p.y+4}" text-anchor="middle" font-size="9" font-weight="700" fill="white">${esc(node.uid)}</text><text x="${p.x}" y="${p.y+45}" text-anchor="middle" font-size="10" fill="#334155">${esc(node.title.slice(0,28))}</text></a>`; });
+            graphSvg.innerHTML = html;
+        }
+        let graphScale = 1; drawGraph(graphScale);
+        document.getElementById("graph-plus")?.addEventListener("click", () => drawGraph(graphScale = Math.min(2, graphScale + .15)));
+        document.getElementById("graph-minus")?.addEventListener("click", () => drawGraph(graphScale = Math.max(.5, graphScale - .15)));
+        document.getElementById("graph-reset")?.addEventListener("click", () => drawGraph(graphScale = 1));        const searchInput = document.getElementById("requirement-search");
         searchInput.addEventListener("input", () => {
             const query = searchInput.value.trim().toLocaleLowerCase("de");
             document.querySelectorAll(".requirement-card").forEach((card) => {
