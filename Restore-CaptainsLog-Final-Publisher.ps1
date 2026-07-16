@@ -16,9 +16,9 @@ Stop-Process -Name WINWORD -Force -ErrorAction SilentlyContinue
 $text = [System.IO.File]::ReadAllText($source, [System.Text.Encoding]::UTF8)
 
 function Replace-Required {
-    param([string]$InputText, [string]$Old, [string]$New, [string]$Name)
+    param([string]$InputText,[string]$Old,[string]$New,[string]$Name)
     if (-not $InputText.Contains($Old)) { throw "Patch point not found: $Name" }
-    return $InputText.Replace($Old, $New)
+    return $InputText.Replace($Old,$New)
 }
 
 # Progress and Word performance settings.
@@ -27,12 +27,12 @@ $text = Replace-Required $text '$word.Visible=$false;$word.DisplayAlerts=0' '$wo
 $text = Replace-Required $text '$document=$word.Documents.Add()' 'Write-Host "[word 2/14] Creating document..."; $document=$word.Documents.Add()' 'Document creation'
 
 $progress = [ordered]@{
-    "    Add-Heading `$sel '1. Management Summary' 1" = "    Write-Host \"[word 3/14] Management summary...\"; Add-Heading `$sel '1. Management Summary' 1",
-    "    Add-Heading `$sel '2. Traceability-Baum' 1" = "    Write-Host \"[word 4/14] Traceability tree...\"; Add-Heading `$sel '2. Traceability-Baum' 1",
-    "    Add-Heading `$sel '3. Traceability-Matrix' 1" = "    Write-Host \"[word 5/14] Traceability matrix...\"; Add-Heading `$sel '3. Traceability-Matrix' 1",
-    "    Add-Heading `$sel '4. Klassifizierung und Risiken' 1" = "    Write-Host \"[word 6/14] Classification and risks...\"; Add-Heading `$sel '4. Klassifizierung und Risiken' 1",
-    "    Add-Heading `$sel '5. Anforderungen im Detail' 1" = "    Write-Host \"[word 7/14] Requirement details...\"; Add-Heading `$sel '5. Anforderungen im Detail' 1",
-    "    Add-Heading `$sel '6. Test- und Verifikationsnachweise' 1" = "    Write-Host \"[word 8/14] Test evidence...\"; Add-Heading `$sel '6. Test- und Verifikationsnachweise' 1",
+    "    Add-Heading `$sel '1. Management Summary' 1" = "    Write-Host \"[word 3/14] Management summary...\"; Add-Heading `$sel '1. Management Summary' 1"
+    "    Add-Heading `$sel '2. Traceability-Baum' 1" = "    Write-Host \"[word 4/14] Traceability tree...\"; Add-Heading `$sel '2. Traceability-Baum' 1"
+    "    Add-Heading `$sel '3. Traceability-Matrix' 1" = "    Write-Host \"[word 5/14] Traceability matrix...\"; Add-Heading `$sel '3. Traceability-Matrix' 1"
+    "    Add-Heading `$sel '4. Klassifizierung und Risiken' 1" = "    Write-Host \"[word 6/14] Classification and risks...\"; Add-Heading `$sel '4. Klassifizierung und Risiken' 1"
+    "    Add-Heading `$sel '5. Anforderungen im Detail' 1" = "    Write-Host \"[word 7/14] Requirement details...\"; Add-Heading `$sel '5. Anforderungen im Detail' 1"
+    "    Add-Heading `$sel '6. Test- und Verifikationsnachweise' 1" = "    Write-Host \"[word 8/14] Test evidence...\"; Add-Heading `$sel '6. Test- und Verifikationsnachweise' 1"
     "    Add-Heading `$sel '7. Audit- und Berichtsnachweise' 1" = "    Write-Host \"[word 9/14] Audit evidence...\"; Add-Heading `$sel '7. Audit- und Berichtsnachweise' 1"
 }
 foreach ($entry in $progress.GetEnumerator()) {
@@ -106,16 +106,16 @@ $pdf = $finalPdf
 $text = Replace-Required $text $checkOld $checkNew.TrimEnd() 'Separate PDF export'
 
 # Save final script with UTF-8 BOM for Windows PowerShell 5.1.
-[System.IO.File]::WriteAllText($final, $text, [System.Text.UTF8Encoding]::new($true))
+[System.IO.File]::WriteAllText($final,$text,[System.Text.UTF8Encoding]::new($true))
 
-$tokens = $null; $errors = $null
-[System.Management.Automation.Language.Parser]::ParseFile($final, [ref]$tokens, [ref]$errors) | Out-Null
-if ($errors.Count -gt 0) { $messages = $errors | ForEach-Object { "Line $($_.Extent.StartLineNumber): $($_.Message)" }; throw "Final publisher syntax errors:`n$($messages -join "`n")" }
+$tokens=$null;$errors=$null
+[System.Management.Automation.Language.Parser]::ParseFile($final,[ref]$tokens,[ref]$errors)|Out-Null
+if($errors.Count -gt 0){$messages=$errors|ForEach-Object{"Line $($_.Extent.StartLineNumber): $($_.Message)"};throw "Final publisher syntax errors:`n$($messages -join "`n")"}
 
-$backup = "$wrapper.before-restored-final.bak"; Copy-Item -LiteralPath $wrapper -Destination $backup -Force
-$wrapperText = [System.IO.File]::ReadAllText($wrapper, [System.Text.Encoding]::UTF8)
-$wrapperText = [regex]::Replace($wrapperText, 'Publish-CaptainsLog-WordReport-(?:v[0-9]+|Final)\.ps1', 'Publish-CaptainsLog-WordReport-Final.ps1')
-[System.IO.File]::WriteAllText($wrapper, $wrapperText, [System.Text.UTF8Encoding]::new($true))
+$backup="$wrapper.before-restored-final.bak";Copy-Item -LiteralPath $wrapper -Destination $backup -Force
+$wrapperText=[System.IO.File]::ReadAllText($wrapper,[System.Text.Encoding]::UTF8)
+$wrapperText=[regex]::Replace($wrapperText,'Publish-CaptainsLog-WordReport-(?:v[0-9]+|Final)\.ps1','Publish-CaptainsLog-WordReport-Final.ps1')
+[System.IO.File]::WriteAllText($wrapper,$wrapperText,[System.Text.UTF8Encoding]::new($true))
 
 Write-Host "Restored final publisher with all performance, save and PDF fixes."
 Write-Host "Final publisher: $final"
